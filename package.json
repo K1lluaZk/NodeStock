@@ -1,0 +1,25 @@
+{
+  "name": "delivway",
+  "version": "1.0.0",
+  "description": "Aplicacion web dirigida a las empresas de delivery, logistica y transporte que busca reducir costos y tiempo.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch ./server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EddyMiguel/Delivway.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EddyMiguel/Delivway/issues"
+  },
+  "homepage": "https://github.com/EddyMiguel/Delivway#readme",
+  "dependencies": {
+    "express": "5.2.1"
+  }
+}
