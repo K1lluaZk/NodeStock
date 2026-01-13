@@ -20,6 +20,10 @@
   },
   "homepage": "https://github.com/EddyMiguel/Delivway#readme",
   "dependencies": {
-    "express": "5.2.1"
+    "axios": "^1.13.2",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.6.0"
   }
 }
