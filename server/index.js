@@ -3,6 +3,7 @@ import cors from 'cors';
 import { PORT } from './config.js'
 import { UserRepository } from './user-repository.js'
 import productRoutes from './routes/productRoutes.js';
+import movementRoutes from './routes/movementRoutes.js';
 
 const app = express()
 
@@ -13,6 +14,7 @@ app.set('view engine', 'ejs')
 app.use(express.json())
 
 app.use('/api/products', productRoutes);
+app.use('/api/movements', movementRoutes);
 
 app.get('/', (req, res) => {
   res.render('index')
