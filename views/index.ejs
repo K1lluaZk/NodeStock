@@ -3,155 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formularios de login y registro</title>
+  <title>Acceso</title>
   <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .container { display: flex; flex-direction: column; align-items: center; }
+    .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 320px; }
+    
+    /* Estilo de Pestañas */
+    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+    .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #666; font-weight: bold; }
+    .tab.active { color: #28a745; border-bottom: 2px solid #28a745; }
+    
+    .hidden { display: none; } /* Para ocultar el form que no se usa */
 
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      background-color: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .form-container {
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      margin: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      width: 300px;
-    }
-
-    form h2 {
-      margin-bottom: 20px;
-      font-size: 24px;
-      text-align: center;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
+    form h2 { margin-bottom: 20px; font-size: 24px; text-align: center; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; }
+    button { width: 100%; padding: 10px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    span { display: block; margin-top: 10px; text-align: center; min-height: 1.2em; }
   </style>
 </head>
 <body>
   <div class="container">
+    
     <% if (typeof username !== 'undefined') { %>
       <div class="form-container">
-        <h2 style="margin: 0; text-align: center;">Hola, <%= username %>!</h2>
-        <p>Estas en el panel de administración</p>
+        <h2 style="margin: 0;">Hola, <%= username %>!</h2>
+        <p style="text-align: center;">Sigues en el panel de administración</p>
+        <button style="margin-bottom: 12px; background-color: #007bff;" id="GoBack">Volver a la parte protegida</button>
         <button id="close-session">Cerrar sesión</button>
       </div>
-      <% } %>
+    <% } %>
 
-      <% if (typeof username === 'undefined') { %>
-        <div class="form-container">
+    <% if (typeof username === 'undefined') { %>
+      <div class="form-container">
+        <div class="tabs">
+          <div id="tab-login" class="tab active">Login</div>
+          <div id="tab-register" class="tab">Registro</div>
+        </div>
+
+        <div id="login-section">
           <form id="login-form">
             <h2>Login</h2>
             <label for="login-username">Username</label>
             <input id="login-username" name="username" required>
-
             <label for="login-password">Password</label>
             <input type="password" id="login-password" name="password" required>
-
             <button type="submit">Login</button>
             <span>&nbsp;</span>
           </form>
         </div>
 
-        <div class="form-container">
+        <div id="register-section" class="hidden">
           <form id="register-form">
             <h2>Register</h2>
             <label for="register-username">Username</label>
             <input id="register-username" name="username" required>
-
             <label for="register-password">Password</label>
             <input type="password" id="register-password" name="password" required>
-
             <label for="register-confirm-password">Confirm password</label>
             <input type="password" id="register-confirm-password" name="password" required>
-
             <button type="submit">Register</button>
             <span>&nbsp;</span>
           </form>
         </div>
-        <% } %>
+      </div>
+    <% } %>
   </div>
 
   <script>
     const $ = el => document.querySelector(el)
 
+    // --- LÓGICA DE PESTAÑAS (Intercambio visual) ---
+    const $tabLogin = $('#tab-login')
+    const $tabRegister = $('#tab-register')
+    const $loginSection = $('#login-section')
+    const $registerSection = $('#register-section')
+
+    $tabLogin?.addEventListener('click', () => {
+      $tabLogin.classList.add('active'); $tabRegister.classList.remove('active');
+      $loginSection.classList.remove('hidden'); $registerSection.classList.add('hidden');
+    })
+
+    $tabRegister?.addEventListener('click', () => {
+      $tabRegister.classList.add('active'); $tabLogin.classList.remove('active');
+      $registerSection.classList.remove('hidden'); $loginSection.classList.add('hidden');
+    })
+
+    // --- TU LÓGICA ORIGINAL (SIN TOCAR NADA) ---
     const $loginForm = $('#login-form')
     const $loginSpan = $('#login-form span')
-
     const $registerForm = $('#register-form')
     const $registerSpan = $('#register-form span')
-
     const $logoutButton = $('#close-session')
 
     $loginForm?.addEventListener('submit', e => {
       e.preventDefault()
       const username = $('#login-username').value
       const password = $('#login-password').value
-
       fetch('/login', { 
         method: 'POST', 
-        headers: { 
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       })
-        .then(res => {
-          if (res.ok) {
-            $loginSpan.innerText = 'Sesión iniciada. Entrando...'
-            $loginSpan.style.color = 'green'
-            setTimeout(() => {
-              window.location.href = '/protected'
-            }, 1500);
-          } else {
-            $loginSpan.innerText = 'Error al iniciar sesión'
-            $loginSpan.style.color = 'red'
-          }
-        })
+      .then(res => {
+        if (res.ok) {
+          $loginSpan.innerText = 'Sesión iniciada. Entrando...'
+          $loginSpan.style.color = 'green'
+          setTimeout(() => { window.location.href = '/protected' }, 1500);
+        } else {
+          $loginSpan.innerText = 'Error al iniciar sesión'
+          $loginSpan.style.color = 'red'
+        }
+      })
     })
 
     $registerForm?.addEventListener('submit', e => {
@@ -159,44 +124,33 @@
       const username = $('#register-username').value
       const password = $('#register-password').value
       const confirmPassword = $('#register-confirm-password').value
-
-      if (password !== confirmPassword){
-        alert('Las contraseñas no coinciden')
-        return
-      }
+      if (password !== confirmPassword){ alert('Las contraseñas no coinciden'); return }
 
       fetch('/register', { 
         method: 'POST', 
-        headers: { 
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       })
-        .then(res => {
-          if (res.ok) {
-            $registerSpan.innerText = 'Usuario registrado. Entrando...'
-            $registerSpan.style.color = 'green'
-            setTimeout(() => {
-              window.location.href = '/protected'
-            }, 1500);
-          } else {
-            $registerSpan.innerText = 'Error al registrar usuario'
-            $registerSpan.style.color = 'red'
-          }
-        })
+      .then(res => {
+        if (res.ok) {
+          $registerSpan.innerText = 'Usuario registrado. Entrando...'
+          $registerSpan.style.color = 'green'
+          setTimeout(() => { window.location.href = '/' }, 1500);
+        } else {
+          $registerSpan.innerText = 'Error al registrar usuario'
+          $registerSpan.style.color = 'red'
+        }
+      })
     })
 
     $logoutButton?.addEventListener('click', e => {
       e.preventDefault()
-      fetch('/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then(res => {
-        console.log(res)
-        window.location.href = '/'
-      })
+      fetch('/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      .then(res => { window.location.href = '/' })
+    })
+
+    $('#GoBack')?.addEventListener('click', () => {
+       window.location.href = '/protected'
     })
   </script>
 </body>

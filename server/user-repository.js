@@ -6,7 +6,6 @@ import { SALT_ROUNDS } from './config.js'
 const usersCollection = db.collection('users')
 
 export class UserRepository {
-
   static async create ({ username, password }) {
     Validation.username(username)
     Validation.password(password)
@@ -67,5 +66,5 @@ class Validation {
   static password (password) {
     if (typeof password !== 'string') throw new Error('Password must be a string')
     if (password.length < 6) throw new Error('Password must be at least 6 characters long')
- }
+  }
 }

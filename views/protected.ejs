@@ -1,8 +1,117 @@
-<html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Protegido</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
 
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .form-container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Centra todo el contenido horizontalmente */
+      text-align: center;
+    }
+
+    h2 {
+      margin: 0 0 10px 0;
+      color: #1c1e21;
+      font-size: 22px;
+    }
+
+    p {
+      margin-bottom: 25px;
+      color: #606770;
+      font-size: 15px;
+    }
+
+    /* Estilo base para los botones */
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease; /* Animación suave al pasar el mouse */
+      margin-bottom: 12px;
+    }
+
+    /* Botón Volver (Estilo Moderno Azul) */
+    #GoBack {
+      background-color: #007bff;
+      color: white;
+    }
+
+    #GoBack:hover {
+      background-color: #0056b3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+    }
+
+    /* Botón Cerrar Sesión (Estilo Minimalista) */
+    #close-session {
+      background-color: #f0f2f5;
+      color: #4b4f56;
+      margin-bottom: 0; /* El último botón no necesita margen inferior */
+    }
+
+    #close-session:hover {
+      background-color: #e4e6eb;
+      color: #dc3545; /* Cambia a rojo suave al querer salir */
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
 <body>
-    <h1>Hey!! <%= username %>! </h1>
-    <h2>Este contenido esta protegido</h2>
-</body>
+  <div class="container">
+    <div class="form-container">
+      <h2>¡Hola, <%= username %>!</h2>
+      <p>Estás en el panel de administración</p>
+      
+      <button id="GoBack">Volver al inicio</button>
+      
+      <button id="close-session">Cerrar sesión</button>
+    </div>
+  </div>
 
+  <script>
+    // Mantenemos tu lógica intacta
+    const $ = el => document.querySelector(el)
+
+    $('#GoBack')?.addEventListener('click', () => {
+       window.location.href = '/protected'
+    })
+
+    $('#close-session')?.addEventListener('click', e => {
+      e.preventDefault()
+      fetch('/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }).then(res => {
+        window.location.href = '/'
+      })
+    })
+  </script>
+</body>
 </html>
