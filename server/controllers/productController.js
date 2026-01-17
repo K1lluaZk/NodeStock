@@ -46,12 +46,12 @@ export const productController = {
 
   // Eliminar Producto
   deleteProduct: async (req, res) => {
-    try {
-      const { id } = req.params;
-      await productsCollection.doc(id).delete();
-      res.status(200).json({ message: "Producto eliminado correctamente" });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+  try {
+    const { id } = req.params;
+    await db.collection('products').doc(id).delete();
+    res.status(200).json({ message: "Eliminado con éxito" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
+}
 };
