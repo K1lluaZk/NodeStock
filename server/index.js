@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 
 import { PORT, SECRET_JWT_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
+import { CategoryRepository } from './category-repository.js'
 
 const app = express()
 
@@ -21,7 +22,7 @@ app.use((req, res, next) => {
     req.session.user = data
   } catch {}
 
-  next() // Seguir al sigueitnte middleware o ruta
+  next() // Seguir al siguiente middleware o ruta
 })
 
 app.get('/', (req, res) => {
@@ -75,6 +76,33 @@ app.get('/protected', (req, res) => {
   const { user } = req.session
   if (!user) return res.status(403).send('Access not authorized')
   res.render('protected', user) // { id, username }
+})
+
+app.post('/create', async (req, res) => {
+  const { name, description } = req.body
+  console.log({ name, description })
+
+  try {
+    const id = await CategoryRepository.create({ name, description })
+    res.send({ id })
+  } catch (error) {
+    res.status(400).send(error.message)
+  }
+})
+
+app.get('/listar', async (req, res) => {
+  try {
+    const categories = await CategoryRepository.getAll()
+    res.send(categories)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+})
+
+app.get('/crud', (req, res) => {
+  const { user } = req.session
+  if (!user) return res.status(403).send('Access not authorized')
+  res.render('crud', user)
 })
 
 app.listen(PORT, () => {
