@@ -1,22 +1,24 @@
-import admin from "firebase-admin"
-import fs from "fs"
-import path from "path"
-import { fileURLToPath } from "url"
+import admin from 'firebase-admin';
+import { readFileSync } from 'fs';
+import path from 'path'; // <--- ESTA ES LA LÍNEA QUE FALTA
+import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const serviceAccountPath = path.join(
-  __dirname,
-  "nodestock-81f9a-firebase-adminsdk-fbsvc-0ff288052e.json"
-)
+// Construimos la ruta al JSON que ya moviste a esta carpeta
+const serviceAccountPath = path.join(__dirname, 'nodestock-81f9a-firebase-adminsdk-fbsvc-0ff288052e.json');
 
-const serviceAccount = JSON.parse(
-  fs.readFileSync(serviceAccountPath, "utf8")
-)
+try {
+  const serviceAccount = JSON.parse(
+    readFileSync(serviceAccountPath, 'utf8')
+  );
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-})
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+  console.log("✅ Firebase conectado correctamente");
+} catch (error) {
+  console.error("❌ Error al leer el archivo JSON de Firebase:", error.message);
+}
 
-export const db = admin.firestore()
+export const db = admin.firestore();

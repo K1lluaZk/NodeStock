@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { db } from './config/firebase.js'
-=======
-import { db } from './firebase.js'
->>>>>>> feat-auth
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import { SALT_ROUNDS } from './config.js'
@@ -10,10 +6,6 @@ import { SALT_ROUNDS } from './config.js'
 const usersCollection = db.collection('users')
 
 export class UserRepository {
-<<<<<<< HEAD
-
-=======
->>>>>>> feat-auth
   static async create ({ username, password }) {
     Validation.username(username)
     Validation.password(password)
@@ -31,7 +23,7 @@ export class UserRepository {
     // Crear usuario
     const id = crypto.randomUUID()
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS) // hashsync bloquea el thread principal
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
     await usersCollection.doc(id).set({
       username,
@@ -65,6 +57,7 @@ export class UserRepository {
     return publicUser
   }
 }
+
 class Validation {
   static username (username) {
     if (typeof username !== 'string') throw new Error('Username must be a string')
@@ -74,10 +67,5 @@ class Validation {
   static password (password) {
     if (typeof password !== 'string') throw new Error('Password must be a string')
     if (password.length < 6) throw new Error('Password must be at least 6 characters long')
-<<<<<<< HEAD
- }
-}
-=======
   }
 }
->>>>>>> feat-auth
