@@ -8,7 +8,6 @@ export class CategoryRepository {
     Validation.name(name)
     Validation.description(description)
 
-    // Verificar si la categoría ya existe
     const snapshot = await categoriesCollection
       .where('name', '==', name)
       .limit(1)
@@ -38,6 +37,43 @@ export class CategoryRepository {
       id: doc.id,
       ...doc.data()
     }))
+  }
+
+  static async update ({ id, name, description }) {
+    if (!id || typeof id !== 'string') {
+      throw new Error('Category id is required')
+    }
+
+    if (name !== undefined) Validation.name(name)
+    if (description !== undefined) Validation.description(description)
+
+    const docRef = categoriesCollection.doc(id)
+    const doc = await docRef.get()
+
+    if (!doc.exists) {
+      throw new Error('Category not found')
+    }
+
+    await docRef.update({
+      ...(name !== undefined && { name }),
+      ...(description !== undefined && { description }),
+      updatedAt: new Date()
+    })
+  }
+
+  static async delete ({ id }) {
+    if (!id || typeof id !== 'string') {
+      throw new Error('Category id is required')
+    }
+
+    const docRef = categoriesCollection.doc(id)
+    const doc = await docRef.get()
+
+    if (!doc.exists) {
+      throw new Error('Category not found')
+    }
+
+    await docRef.delete()
   }
 }
 

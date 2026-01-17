@@ -99,6 +99,28 @@ app.get('/listar', async (req, res) => {
   }
 })
 
+app.put('/editar/:id', async (req, res) => {
+  try {
+    await CategoryRepository.update({
+      id: req.params.id,
+      ...req.body
+    })
+
+    res.send({ message: 'Category updated' })
+  } catch (error) {
+    res.status(400).send(error.message)
+  }
+})
+
+app.delete('/borrar/:id', async (req, res) => {
+  try {
+    await CategoryRepository.delete({ id: req.params.id })
+    res.send({ message: 'Category deleted' })
+  } catch (error) {
+    res.status(400).send(error.message)
+  }
+})
+
 app.get('/crud', (req, res) => {
   const { user } = req.session
   if (!user) return res.status(403).send('Access not authorized')
