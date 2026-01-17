@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>NodeStock - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-3xl font-bold text-gray-800">📦 Inventario NodeStock</h1>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <a href="/categorias" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all shadow-sm">
+                    📁 Categorías
+                </a>
+
+                <button id="btn-logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold border border-red-200 transition-all">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div class="flex gap-2 w-full md:w-auto">
+                <input type="text" id="busqueda" placeholder="Buscar nombre o SKU..." 
+                    class="border border-gray-300 p-2 rounded-lg w-full md:w-64 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
+                
+                <select id="filtro-categoria" class="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm bg-white">
+                    <option value="">Todas las categorías</option>
+                </select>
+            </div>
+            
+            <button onclick="abrirModalNuevo()" 
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
+                <span>+</span> Nuevo Producto
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr class="text-gray-600 text-sm uppercase tracking-wider">
+                        <th class="p-4 font-semibold">Producto</th>
+                        <th class="p-4 font-semibold text-center">SKU</th>
+                        <th class="p-4 text-center font-semibold">Stock</th>
+                        <th class="p-4 text-right font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body" class="divide-y divide-gray-100"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <%- include('partials/modal-producto') %>
+
+<script>
+    let productos = [];
+
+    // CERRAR SESIÓN
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+        try {
+            const res = await fetch('/logout', { method: 'POST' });
+            if (res.ok) window.location.href = '/';
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+        }
+    });
+
+    // CARGAR CATEGORÍAS EN EL SELECTOR DE FILTRO
+    async function loadFilterCategories() {
+        try {
+            const res = await fetch('/api/categories');
+            const categories = await res.json();
+            const select = document.getElementById('filtro-categoria');
+            
+            // Limpiar y mantener la opción por defecto
+            select.innerHTML = '<option value="">Todas las categorías</option>';
+            categories.forEach(cat => {
+                select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
+            });
+        } catch (error) {
+            console.error("Error cargando categorías para filtro:", error);
+        }
+    }
+
+    // CARGAR PRODUCTOS
+    async function load() {
+        try {
+            const res = await fetch('/api/products');
+            productos = await res.json();
+            render(productos);
+        } catch (error) {
+            console.error("Error al cargar productos:", error);
+        }
+    }
+
+    // RENDERIZAR TABLA
+    function render(data) {
+        const body = document.getElementById('tabla-body');
+        if (data.length === 0) {
+            body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = data.map(p => `
+    <tr class="hover:bg-gray-50 border-b border-gray-100">
+        <td class="p-4">
+            <div class="font-bold text-gray-800">${p.name}</div>
+            <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">
+                ${p.categoryName}
+            </span>
+        </td>
+        <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
+        <td class="p-4 text-center">${p.stock}</td>
+        <td class="p-4 text-right flex justify-end gap-2">
+            <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                ✏️ Editar
+            </button>
+            <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                📊 Historial
+            </a>
+            <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">
+                🗑️ Borrar
+            </button>
+        </td>
+    </tr>
+`).join('');
+    }
+
+    // LÓGICA DE FILTRADO COMBINADO
+    function aplicarFiltros() {
+        const term = document.getElementById('busqueda').value.toLowerCase();
+        const catFilter = document.getElementById('filtro-categoria').value;
+
+        const filtrados = productos.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term);
+            const matchesCategory = catFilter === "" || p.categoryName === catFilter;
+            return matchesSearch && matchesCategory;
+        });
+
+        render(filtrados);
+    }
+
+    // EVENTOS DE FILTRO
+    document.getElementById('busqueda').oninput = aplicarFiltros;
+    document.getElementById('filtro-categoria').onchange = aplicarFiltros;
+
+    async function eliminarProducto(id) {
+        if (confirm('¿Estás seguro de eliminar este producto?')) {
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (res.ok) load();
+        }
+    }
+
+    function abrirModalEdicion(p) {
+    const modal = document.getElementById('modalProducto');
+    const form = document.getElementById('formProducto');
+    
+    // Cambiar textos del modal
+    modal.querySelector('h2').innerText = 'Editar Producto (Restringido)';
+    form.querySelector('button[type="submit"]').innerText = 'Actualizar Cambios';
+    
+    // Rellenar campos con los datos actuales
+    // Asegúrate de que los IDs coincidan con los de tu partial modal-producto
+    form.name.value = p.name;
+    form.sku.value = p.sku;
+    form.price.value = p.price;
+    form.stock.value = p.stock;
+    
+    // BLOQUEAR campos que no se pueden cambiar
+    form.name.readOnly = true;
+    form.sku.readOnly = true;
+    form.stock.readOnly = true;
+
+    // Añadir estilo visual de "bloqueado"
+    const readonlyClasses = ['bg-gray-100', 'cursor-not-allowed', 'text-gray-500'];
+    form.name.classList.add(...readonlyClasses);
+    form.sku.classList.add(...readonlyClasses);
+    form.stock.classList.add(...readonlyClasses);
+    
+    // Guardar el ID para saber que es una actualización
+    form.dataset.editId = p.id;
+
+    // Seleccionar la categoría actual
+    setTimeout(() => {
+        const select = form.querySelector('select[name="categoryId"]');
+        if (select) select.value = p.categoryId || "";
+    }, 100);
+
+    modal.classList.remove('hidden');
+}
+
+// Función para limpiar el modal y desbloquear campos para un NUEVO producto
+function abrirModalNuevo() {
+    const modal = document.getElementById('modalProducto');
+    const form = document.getElementById('formProducto');
+    
+    form.reset();
+    delete form.dataset.editId;
+
+    // Quitar el estado de Solo Lectura
+    form.name.readOnly = false;
+    form.sku.readOnly = false;
+    form.stock.readOnly = false;
+
+    // Quitar estilos de bloqueo
+    const readonlyClasses = ['bg-gray-100', 'cursor-not-allowed', 'text-gray-500'];
+    form.name.classList.remove(...readonlyClasses);
+    form.sku.classList.remove(...readonlyClasses);
+    form.stock.classList.remove(...readonlyClasses);
+
+    modal.querySelector('h2').innerText = 'Nuevo Producto';
+    form.querySelector('button[type="submit"]').innerText = 'Guardar en Inventario';
+    
+    modal.classList.remove('hidden');
+}
+
+    // INICIO
+    load();
+    loadFilterCategories();
+</script>
+</body>
+</html>

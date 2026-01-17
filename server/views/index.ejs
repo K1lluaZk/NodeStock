@@ -1,116 +1,157 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>NodeStock - Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .container { display: flex; flex-direction: column; align-items: center; }
+    .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 320px; }
+    
+    /* Estilo de Pestañas */
+    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+    .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #666; font-weight: bold; }
+    .tab.active { color: #28a745; border-bottom: 2px solid #28a745; }
+    
+    .hidden { display: none; } /* Para ocultar el form que no se usa */
+
+    form h2 { margin-bottom: 20px; font-size: 24px; text-align: center; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; }
+    button { width: 100%; padding: 10px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    span { display: block; margin-top: 10px; text-align: center; min-height: 1.2em; }
+  </style>
 </head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-6xl mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-            <h1 class="text-3xl font-bold text-gray-800">📦 Inventario NodeStock</h1>
-            
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <input type="text" id="busqueda" placeholder="Buscar nombre o SKU..." 
-                    class="border border-gray-300 p-2 rounded-lg w-full md:w-64 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
-                
-                <button onclick="document.getElementById('modalProducto').classList.remove('hidden')" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2 whitespace-nowrap">
-                    <span>+</span> Nuevo Producto
-                </button>
-            </div>
+<body>
+  <div class="container">
+    
+    <% if (typeof username !== 'undefined') { %>
+      <div class="form-container">
+        <h2 style="margin: 0;">Hola, <%= username %>!</h2>
+        <p style="text-align: center;">Sigues en el panel de administración</p>
+        <button style="margin-bottom: 12px; background-color: #007bff;" id="GoBack">Volver a la parte protegida</button>
+        <button id="close-session">Cerrar sesión</button>
+      </div>
+    <% } %>
+
+    <% if (typeof username === 'undefined') { %>
+      <div class="form-container">
+        <div class="tabs">
+          <div id="tab-login" class="tab active">Login</div>
+          <div id="tab-register" class="tab">Registro</div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-            <table class="w-full text-left">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr class="text-gray-600 text-sm uppercase tracking-wider">
-                        <th class="p-4 font-semibold">Producto</th>
-                        <th class="p-4 font-semibold text-center">SKU</th>
-                        <th class="p-4 text-center font-semibold">Stock</th>
-                        <th class="p-4 text-right font-semibold">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-body" class="divide-y divide-gray-100">
-                    </tbody>
-            </table>
+        <div id="login-section">
+          <form id="login-form">
+            <h2>Login</h2>
+            <label for="login-username">Username</label>
+            <input id="login-username" name="username" required>
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" required>
+            <button type="submit">Login</button>
+            <span>&nbsp;</span>
+          </form>
         </div>
-    </div>
 
-    <%- include('partials/modal-producto') %>
+        <div id="register-section" class="hidden">
+          <form id="register-form">
+            <h2>Register</h2>
+            <label for="register-username">Username</label>
+            <input id="register-username" name="username" required>
+            <label for="register-password">Password</label>
+            <input type="password" id="register-password" name="password" required>
+            <label for="register-confirm-password">Confirm password</label>
+            <input type="password" id="register-confirm-password" name="password" required>
+            <button type="submit">Register</button>
+            <span>&nbsp;</span>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
 
-    <script>
-        let productos = [];
+  <script>
+    const $ = el => document.querySelector(el)
 
-        // Cargar productos desde la API
-        async function load() {
-            try {
-                const res = await fetch('/api/products');
-                productos = await res.json();
-                render(productos);
-            } catch (error) {
-                console.error("Error al cargar productos:", error);
-            }
+    // --- LÓGICA DE PESTAÑAS (Intercambio visual) ---
+    const $tabLogin = $('#tab-login')
+    const $tabRegister = $('#tab-register')
+    const $loginSection = $('#login-section')
+    const $registerSection = $('#register-section')
+
+    $tabLogin?.addEventListener('click', () => {
+      $tabLogin.classList.add('active'); $tabRegister.classList.remove('active');
+      $loginSection.classList.remove('hidden'); $registerSection.classList.add('hidden');
+    })
+
+    $tabRegister?.addEventListener('click', () => {
+      $tabRegister.classList.add('active'); $tabLogin.classList.remove('active');
+      $registerSection.classList.remove('hidden'); $loginSection.classList.add('hidden');
+    })
+
+    // --- TU LÓGICA ORIGINAL (SIN TOCAR NADA) ---
+    const $loginForm = $('#login-form')
+    const $loginSpan = $('#login-form span')
+    const $registerForm = $('#register-form')
+    const $registerSpan = $('#register-form span')
+    const $logoutButton = $('#close-session')
+
+    $loginForm?.addEventListener('submit', e => {
+      e.preventDefault()
+      const username = $('#login-username').value
+      const password = $('#login-password').value
+      fetch('/login', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => {
+        if (res.ok) {
+          $loginSpan.innerText = 'Sesión iniciada. Entrando...'
+          $loginSpan.style.color = 'green'
+          setTimeout(() => { window.location.href = '/dash' }, 1500);
+        } else {
+          $loginSpan.innerText = 'Error al iniciar sesión'
+          $loginSpan.style.color = 'red'
         }
+      })
+    })
 
-        // Renderizar la tabla con estilos y botones
-        function render(data) {
-            const body = document.getElementById('tabla-body');
-            
-            if (data.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos en el inventario.</td></tr>`;
-                return;
-            }
+    $registerForm?.addEventListener('submit', e => {
+      e.preventDefault()
+      const username = $('#register-username').value
+      const password = $('#register-password').value
+      const confirmPassword = $('#register-confirm-password').value
+      if (password !== confirmPassword){ alert('Las contraseñas no coinciden'); return }
 
-            body.innerHTML = data.map(p => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 font-bold text-gray-800">${p.name}</td>
-                    <td class="p-4 text-gray-500 text-center font-mono text-sm">${p.sku}</td>
-                    <td class="p-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${p.stock < 5 ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}">
-                            ${p.stock}
-                        </span>
-                    </td>
-                    <td class="p-4 text-right flex justify-end gap-4">
-                        <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center gap-1">
-                            📊 Historial
-                        </a>
-                        <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm flex items-center gap-1">
-                            🗑️ Eliminar
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+      fetch('/register', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => {
+        if (res.ok) {
+          $registerSpan.innerText = 'Usuario registrado. Entrando...'
+          $registerSpan.style.color = 'green'
+          setTimeout(() => { window.location.href = '/' }, 1500);
+        } else {
+          $registerSpan.innerText = 'Error al registrar usuario'
+          $registerSpan.style.color = 'red'
         }
+      })
+    })
 
-        // Lógica del buscador
-        document.getElementById('busqueda').oninput = (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtrados = productos.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                p.sku.toLowerCase().includes(term)
-            );
-            render(filtrados);
-        };
+    $logoutButton?.addEventListener('click', e => {
+      e.preventDefault()
+      fetch('/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      .then(res => { window.location.href = '/' })
+    })
 
-        // Función para eliminar producto con confirmación
-        async function eliminarProducto(id) {
-            if (confirm('¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer y borrará su historial.')) {
-                try {
-                    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        load(); // Recarga la lista desde el servidor
-                    } else {
-                        alert('Error al intentar eliminar el producto.');
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                }
-            }
-        }
-
-        // Carga inicial
-        load();
-    </script>
+    $('#GoBack')?.addEventListener('click', () => {
+       window.location.href = '/dash'
+    })
+  </script>
 </body>
 </html>
