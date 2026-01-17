@@ -90,7 +90,7 @@ app.post('/create', async (req, res) => {
   }
 })
 
-app.get('/listar', async (req, res) => {
+app.get('/categories', async (req, res) => {
   try {
     const categories = await CategoryRepository.getAll()
     res.send(categories)
@@ -99,7 +99,7 @@ app.get('/listar', async (req, res) => {
   }
 })
 
-app.put('/editar/:id', async (req, res) => {
+app.put('/update/:id', async (req, res) => {
   try {
     await CategoryRepository.update({
       id: req.params.id,
@@ -112,7 +112,7 @@ app.put('/editar/:id', async (req, res) => {
   }
 })
 
-app.delete('/borrar/:id', async (req, res) => {
+app.delete('/delete/:id', async (req, res) => {
   try {
     await CategoryRepository.delete({ id: req.params.id })
     res.send({ message: 'Category deleted' })

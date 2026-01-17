@@ -1,9 +1,191 @@
-<html></html>
-  <head>
-    <title>CRUD Categories</title>
-  </head>
-  <body>
-    <h1>CRUD Categories</h1>
-    <p>Welcome to the CRUD categories page.</p>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD Categorías</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 40px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.1);
+    }
+    h1 { margin-top: 0; }
+
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button.create { background: #28a745; color: white; }
+    button.delete { background: #dc3545; color: white; }
+    button.edit { background: rgb(29, 142, 248); color: white;}
+    button.cancel { background: #dc3545; color: white; }
+    button.save { background: #28a745; color: white; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th { background: #fafafa; }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Categorías</h1>
+
+    <form id="category-form">
+      <input id="name" placeholder="Nombre" required>
+      <input id="description" placeholder="Descripción">
+      <button class="create" type="submit">Crear</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="categories-table"></tbody>
+    </table>
+  </div>
+
+<script>
+  const $ = el => document.querySelector(el)
+
+  // --- CARGAR CATEGORÍAS ---
+  async function loadCategories () {
+    const res = await fetch('/categories')
+    const categories = await res.json()
+
+    const table = $('#categories-table')
+    table.innerHTML = ''
+
+    categories.forEach(cat => {
+      const row = document.createElement('tr')
+
+      row.innerHTML = `
+        <td class="name">${cat.name}</td>
+        <td class="description">${cat.description}</td>
+        <td class="actions">
+          <button class="edit" onclick="editCategory(this, '${cat.id}')">Editar</button>
+          <button class="delete" onclick="deleteCategory('${cat.id}')">Eliminar</button>
+        </td>
+      `
+
+      table.appendChild(row)
+    })
+  }
+
+  // --- CREAR CATEGORÍA ---
+  $('#category-form').addEventListener('submit', async e => {
+    e.preventDefault()
+
+    const name = $('#name').value.trim()
+    const description = $('#description').value.trim()
+
+    if (!name) return alert('El nombre es obligatorio')
+
+    await fetch('/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description })
+    })
+
+    $('#name').value = ''
+    $('#description').value = ''
+
+    loadCategories()
+  })
+
+  // --- EDITAR CATEGORÍA (modo edición) ---
+  function editCategory (button, id) {
+    const row = button.closest('tr')
+
+    const nameCell = row.querySelector('.name')
+    const descCell = row.querySelector('.description')
+    const actionsCell = row.querySelector('.actions')
+
+    const currentName = nameCell.innerText
+    const currentDesc = descCell.innerText
+
+    nameCell.innerHTML = `<input value="${currentName}">`
+    descCell.innerHTML = `<input value="${currentDesc}">`
+
+    actionsCell.innerHTML = `
+      <button class="save" onclick="saveCategory(this, '${id}')">Guardar</button>
+      <button class="cancel" onclick="loadCategories()">Cancelar</button>
+    `
+  }
+
+  // --- GUARDAR EDICIÓN ---
+  async function saveCategory (button, id) {
+    const row = button.closest('tr')
+
+    const name = row.querySelector('.name input').value.trim()
+    const description = row.querySelector('.description input').value.trim()
+
+    if (!name) return alert('El nombre es obligatorio')
+
+    await fetch(`/update/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description })
+    })
+
+    loadCategories()
+  }
+
+  // --- ELIMINAR CATEGORÍA ---
+  async function deleteCategory (id) {
+    if (!confirm('¿Eliminar esta categoría?')) return
+
+    await fetch(`/delete/${id}`, {
+      method: 'DELETE'
+    })
+
+    loadCategories()
+  }
+
+  // --- INIT ---
+  loadCategories()
+</script>
