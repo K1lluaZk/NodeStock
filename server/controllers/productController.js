@@ -1,4 +1,4 @@
-import { db } from '../config/firebase.js'; // IMPORTANTE el .js
+import { db } from '../firebase.js'; // IMPORTANTE el .js
 import { createProductModel } from '../models/Product.js';
 
 const collection = db.collection('products');

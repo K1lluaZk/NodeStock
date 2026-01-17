@@ -1,4 +1,4 @@
-import { db } from '../config/firebase.js';
+import { db } from '../firebase.js';
 import { createMovementModel } from '../models/Movement.js';
 
 const productsCollection = db.collection('products');

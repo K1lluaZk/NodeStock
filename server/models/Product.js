@@ -7,5 +7,5 @@ export const createProductModel = (data) => {
     category: data.category || 'General',
     sku: data.sku || '',
     createdAt: new Date().toISOString()
-  };
-};
+  }
+}
