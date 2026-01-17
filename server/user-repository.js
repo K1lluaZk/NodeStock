@@ -23,7 +23,7 @@ export class UserRepository {
     // Crear usuario
     const id = crypto.randomUUID()
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS) // hashsync bloquea el thread principal
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
     await usersCollection.doc(id).set({
       username,
@@ -57,6 +57,7 @@ export class UserRepository {
     return publicUser
   }
 }
+
 class Validation {
   static username (username) {
     if (typeof username !== 'string') throw new Error('Username must be a string')
