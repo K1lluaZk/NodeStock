@@ -145,3 +145,5 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+nodestock-81f9a-firebase-adminsdk-fbsvc-0ff288052e.json
+firebase.js
