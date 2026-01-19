@@ -12,6 +12,7 @@ import productRoutes from './routes/productRoutes.js'
 import movementRoutes from './routes/movementRoutes.js'
 import { db } from './firebase.js'
 
+// Configuración de rutas absolutas
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 

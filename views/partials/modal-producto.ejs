@@ -11,11 +11,19 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Producto</label>
-                    <input type="text" name="name" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm" placeholder="Ej: Monitor Gamer 24'">
+                    <input type="text" id="prodName" name="name" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm" placeholder="Ej: Monitor Gamer 24'">
                 </div>
+
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                    <select id="selectCategorias" name="categoryId" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm bg-white">
+                        <option value="">Cargando categorías...</option>
+                    </select>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">SKU (Código único)</label>
-                    <input type="text" name="sku" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm" placeholder="MOD-001">
+                    <input type="text" id="prodSku" name="sku" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm" placeholder="MOD-001">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Precio Unitario</label>
@@ -23,7 +31,7 @@
                 </div>
                 <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Stock Inicial</label>
-                    <input type="number" name="stock" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm" placeholder="Cantidad actual">
+                    <input type="number" id="prodStock" name="stock" required class="w-full border rounded-lg p-2 focus:ring-blue-500 border-gray-300 shadow-sm" placeholder="Cantidad actual">
                 </div>
             </div>
 
@@ -40,6 +48,33 @@
 </div>
 
 <script>
+    // Función para cargar categorías dinámicamente
+    async function fetchCategories() {
+        const select = document.getElementById('selectCategorias');
+        try {
+            // Asegúrate de tener esta ruta GET /api/categories en tu servidor
+            const response = await fetch('/api/categories');
+            const categories = await response.json();
+            
+            select.innerHTML = '<option value="">Seleccione una categoría</option>' + 
+                categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        } catch (error) {
+            select.innerHTML = '<option value="">Error al cargar categorías</option>';
+        }
+    }
+
+    // Cargamos categorías cada vez que se intenta abrir el modal
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === "class") {
+                const isHidden = mutation.target.classList.contains('hidden');
+                if (!isHidden) fetchCategories();
+            }
+        });
+    });
+
+    observer.observe(document.getElementById('modalProducto'), { attributes: true });
+
     // Lógica para enviar el formulario al Backend
     document.getElementById('formProducto').onsubmit = async (e) => {
         e.preventDefault();
@@ -55,7 +90,6 @@
             });
 
             if (response.ok) {
-                // Si se guarda con éxito, recargamos para ver el nuevo producto en la tabla
                 location.reload();
             } else {
                 const errorData = await response.json();
@@ -66,4 +100,48 @@
             alert('No se pudo conectar con el servidor');
         }
     };
+
+    function abrirModalEdicion(producto) {
+    const modal = document.getElementById('modalProducto');
+    const form = document.getElementById('formProducto');
+    
+    // Cambiar título y botón
+    modal.querySelector('h2').innerText = 'Editar Producto';
+    form.querySelector('button[type="submit"]').innerText = 'Actualizar Producto';
+    
+    // Rellenar campos
+    form.name.value = producto.name;
+    form.sku.value = producto.sku;
+    form.price.value = producto.price;
+    form.stock.value = producto.stock;
+    
+    // Guardar el ID en un atributo del form para saber que estamos editando
+    form.dataset.editId = producto.id;
+    
+    // Seleccionar la categoría actual
+    setTimeout(() => {
+        document.getElementById('selectCategorias').value = producto.categoryId || "";
+    }, 500); // Esperamos a que carguen las categorías
+
+    modal.classList.remove('hidden');
+}
+
+// Modificar el submit del form
+document.getElementById('formProducto').onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    const editId = e.target.dataset.editId;
+
+    const url = editId ? `/api/products/${editId}` : '/api/products';
+    const method = editId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    if (response.ok) location.reload();
+};
 </script>

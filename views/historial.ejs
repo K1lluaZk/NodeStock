@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto p-8">
-        <a href="/" class="text-blue-600 hover:underline">← Volver al Dashboard</a>
+        <a href="/dash" class="text-blue-600 hover:underline">← Volver al Dashboard</a>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border text-center lg:text-left">
@@ -67,16 +67,16 @@
     <%- include('partials/modal-movimiento', { productoId: producto.id }) %>
 
     <script>
-        // Inyectamos los datos de EJS a variables de JS de forma segura
+        // Inyectamos los datos con comillas para evitar errores de sintaxis en el editor
         const movsRaw = JSON.parse('<%- JSON.stringify(movimientos) %>');
         
-        // Reversamos para que el gráfico sea de más viejo a más nuevo
-        const movsOrdenados = [...movsRaw].reverse();
+        // Reversamos para que el gráfico sea cronológico (viejo -> nuevo)
+        const movsOrdenados = [...movsRaw].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        // Calculamos el historial acumulado
+        // Calculamos el historial acumulado para la línea del gráfico
         let acumulado = 0;
         const dataPuntos = movsOrdenados.map(m => {
-            acumulado = (m.type === 'IN') ? (acumulado + m.quantity) : (acumulado - m.quantity);
+            acumulado = (m.type === 'IN') ? (acumulado + Number(m.quantity)) : (acumulado - Number(m.quantity));
             return acumulado;
         });
 
@@ -84,7 +84,7 @@
             return new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
         });
 
-        // Configuración del Gráfico
+        // Configuración del Gráfico de Chart.js
         const ctx = document.getElementById('stockChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
