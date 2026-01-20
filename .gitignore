@@ -72,6 +72,17 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
+# Secrets
+*.json
+*.env
+server/config/*.json
+
+# Firebase secrets
+server/config/*.json
+node_modules/
+.env
+
+
 # dotenv environment variable files
 .env
 .env.development.local
@@ -134,3 +145,5 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+nodestock-81f9a-firebase-adminsdk-fbsvc-0ff288052e.json
+firebase.js

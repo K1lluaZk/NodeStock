@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Categorías - NodeStock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">📁 Categorías</h1>
+            <a href="/dash" class="text-indigo-600 hover:underline font-medium">← Volver al Inventario</a>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-lg font-bold mb-4 text-gray-700">Nueva Categoría</h2>
+            <form id="formCat" class="flex gap-4">
+                <input type="text" id="catName" placeholder="Nombre (ej: Electrónica)" required 
+                    class="flex-1 border border-gray-300 p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="catDesc" placeholder="Descripción breve" 
+                    class="flex-1 border border-gray-300 p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all">
+                    Guardar
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b">
+                    <tr class="text-gray-600 text-sm uppercase">
+                        <th class="p-4 font-semibold">Nombre</th>
+                        <th class="p-4 font-semibold">Descripción</th>
+                        <th class="p-4 text-right font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-categorias" class="divide-y divide-gray-100">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Cargar categorías al iniciar
+        async function loadCats() {
+            const res = await fetch('/api/categories');
+            const data = await res.json();
+            const body = document.getElementById('lista-categorias');
+            
+            body.innerHTML = data.map(cat => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-4 font-bold text-gray-800">${cat.name}</td>
+                    <td class="p-4 text-gray-500">${cat.description || '-'}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="eliminarCat('${cat.id}')" class="text-red-500 hover:text-red-700 font-medium">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Crear categoría
+        document.getElementById('formCat').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('catName').value;
+            const description = document.getElementById('catDesc').value;
+
+            const res = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            });
+
+            if (res.ok) {
+                e.target.reset();
+                loadCats();
+            }
+        };
+
+        // Eliminar categoría (ELIMINACIÓN REAL)
+        async function eliminarCat(id) {
+            if (confirm('¿Estás seguro de eliminar esta categoría?')) {
+                const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadCats();
+                } else {
+                    alert('Error al eliminar la categoría');
+                }
+            }
+        }
+
+        loadCats();
+    </script>
+</body>
+</html>

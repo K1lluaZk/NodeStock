@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial - <%= producto.name %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-8">
+        <a href="/dash" class="text-blue-600 hover:underline">← Volver al Dashboard</a>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border text-center lg:text-left">
+                <h1 class="text-2xl font-bold text-gray-800"><%= producto.name %></h1>
+                <p class="text-gray-500 font-mono">SKU: <%= producto.sku %></p>
+                <div class="mt-4">
+                    <span class="text-5xl font-extrabold text-indigo-600"><%= producto.stock %></span>
+                    <p class="text-gray-500 mt-1">unidades en inventario</p>
+                </div>
+                <button onclick="document.getElementById('modalMovimiento').classList.remove('hidden')" 
+                        class="w-full mt-6 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    Registrar Movimiento
+                </button>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
+                <h3 class="font-bold mb-4 text-gray-700 text-center lg:text-left">Evolución del Stock</h3>
+                <canvas id="stockChart" height="120"></canvas>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white rounded-xl shadow-sm border overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-100 border-b">
+                    <tr class="text-gray-600 text-sm">
+                        <th class="p-4">Fecha y Hora</th>
+                        <th class="p-4">Operación</th>
+                        <th class="p-4">Cantidad</th>
+                        <th class="p-4">Motivo</th>
+                        <th class="p-4">Usuario</th>
+                    </tr>
+                </thead>
+                <tbody id="movimientos-lista">
+                    <% movimientos.forEach(mov => { %>
+                        <tr class="border-b hover:bg-gray-50 transition-colors">
+                            <td class="p-4 text-sm text-gray-600">
+                                <%= new Date(mov.date).toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) %>
+                            </td>
+                            <td class="p-4">
+                                <span class="<%= mov.type === 'IN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %> px-2 py-1 rounded text-xs font-bold uppercase">
+                                    <%= mov.type === 'IN' ? 'Entrada' : 'Salida' %>
+                                </span>
+                            </td>
+                            <td class="p-4 font-semibold <%= mov.type === 'IN' ? 'text-green-600' : 'text-red-600' %>">
+                                <%= mov.type === 'IN' ? '+' : '-' %> <%= mov.quantity %>
+                            </td>
+                            <td class="p-4 text-gray-500 text-sm italic"><%= mov.reason %></td>
+                            <td class="p-4 text-gray-600 text-sm"><%= mov.user %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <%- include('partials/modal-movimiento', { productoId: producto.id }) %>
+
+    <script>
+        // Inyectamos los datos con comillas para evitar errores de sintaxis en el editor
+        const movsRaw = JSON.parse('<%- JSON.stringify(movimientos) %>');
+        
+        // Reversamos para que el gráfico sea cronológico (viejo -> nuevo)
+        const movsOrdenados = [...movsRaw].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // Calculamos el historial acumulado para la línea del gráfico
+        let acumulado = 0;
+        const dataPuntos = movsOrdenados.map(m => {
+            acumulado = (m.type === 'IN') ? (acumulado + Number(m.quantity)) : (acumulado - Number(m.quantity));
+            return acumulado;
+        });
+
+        const labels = movsOrdenados.map(m => {
+            return new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        });
+
+        // Configuración del Gráfico de Chart.js
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Stock Histórico',
+                    data: dataPuntos,
+                    borderColor: 'rgb(79, 70, 229)',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: 'rgb(79, 70, 229)',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
