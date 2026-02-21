@@ -66,7 +66,7 @@
             const name = document.getElementById('catName').value;
             const description = document.getElementById('catDesc').value;
 
-            const res = await fetch('/api/categories', {
+            const res = await fetch('/api/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, description })
@@ -81,7 +81,7 @@
         // Eliminar categoría (ELIMINACIÓN REAL)
         async function eliminarCat(id) {
             if (confirm('¿Estás seguro de eliminar esta categoría?')) {
-                const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/delete/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     loadCats();
                 } else {

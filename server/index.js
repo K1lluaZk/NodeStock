@@ -74,7 +74,7 @@ app.get('/producto/:id', async (req, res) => {
 app.use('/api/products', productRoutes)
 app.use('/api/movements', movementRoutes)
 
-// API de Categorías (CRUD organizado)
+// API de Categorías
 app.get('/api/categories', async (req, res) => {
   try {
     const categories = await CategoryRepository.getAll()
