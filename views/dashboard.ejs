@@ -4,238 +4,221 @@
     <meta charset="UTF-8">
     <title>NodeStock - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
+<body class="bg-gray-100 p-8">
     <div class="max-w-6xl mx-auto">
-        
-        <div class="flex justify-between items-center mb-10 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-            <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 p-2 rounded-lg text-white">
-                    <i class="fas fa-boxes text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-800">NodeStock</h1>
-                    <p class="text-xs text-gray-500">Sesión iniciada como: <span class="font-semibold text-indigo-600"><%= user.username %></span></p>
-                </div>
-            </div>
-            <a href="/logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 border border-red-100 shadow-sm">
-                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-            </a>
-        </div>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-3xl font-bold text-gray-800">📦 Inventario NodeStock</h1>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <a href="/categories" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all shadow-sm">
+                    📁 Categorías
+                </a>
 
-        <div class="mb-12">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    📦 Inventario de Productos
-                </h2>
-                <div class="flex items-center gap-4 w-full md:w-auto">
-                    <input type="text" id="busqueda" placeholder="Buscar nombre o SKU..." 
-                        class="border border-gray-300 p-2 rounded-lg w-full md:w-64 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition-all">
-                    
-                    <button onclick="document.getElementById('modalProducto').classList.remove('hidden')" 
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2 whitespace-nowrap">
-                        <i class="fas fa-plus"></i> Nuevo Producto
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr class="text-gray-600 text-xs uppercase tracking-wider">
-                            <th class="p-4 font-bold">Producto</th>
-                            <th class="p-4 font-bold text-center">SKU</th>
-                            <th class="p-4 text-center font-bold">Stock</th>
-                            <th class="p-4 text-right font-bold">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-body" class="divide-y divide-gray-100"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div>
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-tags text-indigo-500"></i> Categorías
-                </h2>
-                <button onclick="abrirModalCategoria()" 
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
-                    <i class="fas fa-plus text-xs"></i> Nueva Categoría
+                <button id="btn-logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold border border-red-200 transition-all">
+                    Logout
                 </button>
             </div>
+        </div>
 
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr class="text-gray-600 text-xs uppercase tracking-wider">
-                            <th class="p-4 font-bold">Nombre</th>
-                            <th class="p-4 font-bold">Descripción</th>
-                            <th class="p-4 text-right font-bold">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-categorias" class="divide-y divide-gray-100"></tbody>
-                </table>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div class="flex gap-2 w-full md:w-auto">
+                <input type="text" id="busqueda" placeholder="Buscar nombre o SKU..." 
+                    class="border border-gray-300 p-2 rounded-lg w-full md:w-64 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
+                
+                <select id="filtro-categoria" class="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm bg-white">
+                    <option value="">Todas las categorías</option>
+                </select>
             </div>
+            
+            <button onclick="abrirModalNuevo()" 
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
+                <span>+</span> Nuevo Producto
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr class="text-gray-600 text-sm uppercase tracking-wider">
+                        <th class="p-4 font-semibold">Producto</th>
+                        <th class="p-4 font-semibold text-center">SKU</th>
+                        <th class="p-4 text-center font-semibold">Stock</th>
+                        <th class="p-4 text-right font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body" class="divide-y divide-gray-100"></tbody>
+            </table>
         </div>
     </div>
 
     <%- include('partials/modal-producto') %>
 
-<div id="modalCategoria" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-        <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">
-            <h3 id="modalCategoriaTitulo" class="font-bold text-lg">Nueva Categoría</h3>
-            <button onclick="cerrarModalCategoria()" class="hover:text-gray-200 text-2xl leading-none">&times;</button>
-        </div>
-        <form id="formCategoria" class="p-6">
-            <input type="hidden" id="catId">
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Nombre</label>
-                <input type="text" id="catNombre" required 
-                    placeholder="Ej: Electrónica, Ropa, Hogar..." 
-                    class="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none placeholder-gray-400 transition-all">
-            </div>
-            <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Descripción</label>
-                <textarea id="catDescripcion" rows="3" 
-                    placeholder="Breve descripción de los productos que pertenecen a esta categoría..." 
-                    class="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none placeholder-gray-400 transition-all"></textarea>
-            </div>
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="cerrarModalCategoria()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-semibold">Cancelar</button>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-all">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
+<script>
+    let productos = [];
 
-    <script>
-        let productos = [];
-        let categorias = [];
-
-        // --- CARGA INICIAL ---
-        async function init() {
-            await Promise.all([load(), loadCategories()]);
+    // CERRAR SESIÓN
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+        try {
+            const res = await fetch('/logout', { method: 'GET' });
+            if (res.ok) window.location.href = '/';
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
         }
+    });
 
-        // --- LÓGICA PRODUCTOS ---
-        async function load() {
-            try {
-                const res = await fetch('/api/products');
-                productos = await res.json();
-                renderProductos(productos);
-            } catch (error) { console.error("Error productos:", error); }
-        }
-
-        function renderProductos(data) {
-            const body = document.getElementById('tabla-body');
-            if (data.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400 italic">No hay productos.</td></tr>`;
-                return;
-            }
-            body.innerHTML = data.map(p => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 font-bold text-gray-800">${p.name}</td>
-                    <td class="p-4 text-gray-500 text-center font-mono text-sm">${p.sku}</td>
-                    <td class="p-4 text-center">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${p.stock < 5 ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}">
-                            ${p.stock} unidades
-                        </span>
-                    </td>
-                    <td class="p-4 text-right flex justify-end gap-3">
-                        <a href="/producto/${p.id}" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><i class="fas fa-chart-line"></i></a>
-                        <button onclick="eliminarProducto('${p.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        async function eliminarProducto(id) {
-            if (confirm('¿Eliminar producto?')) {
-                await fetch(`/api/products/${id}`, { method: 'DELETE' });
-                load();
-            }
-        }
-
-        // --- LÓGICA CATEGORÍAS ---
-        async function loadCategories() {
-            try {
-                const res = await fetch('/api/categories');
-                categorias = await res.json();
-                renderCategories(categorias);
-            } catch (error) { console.error("Error categorías:", error); }
-        }
-
-        function renderCategories(data) {
-            const body = document.getElementById('tabla-categorias');
-            body.innerHTML = data.map(c => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4 font-bold text-gray-800">${c.name}</td>
-                    <td class="p-4 text-gray-500 text-sm">${c.description || 'Sin descripción'}</td>
-                    <td class="p-4 text-right flex justify-end gap-3">
-                        <button onclick="editarCategoria('${c.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><i class="fas fa-edit"></i></button>
-                        <button onclick="eliminarCategoria('${c.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function abrirModalCategoria() {
-            document.getElementById('modalCategoriaTitulo').innerText = 'Nueva Categoría';
-            document.getElementById('formCategoria').reset();
-            document.getElementById('catId').value = '';
-            document.getElementById('modalCategoria').classList.remove('hidden');
-        }
-
-        function cerrarModalCategoria() {
-            document.getElementById('modalCategoria').classList.add('hidden');
-        }
-
-        function editarCategoria(id) {
-            const cat = categorias.find(c => c.id === id);
-            if (!cat) return;
-            document.getElementById('modalCategoriaTitulo').innerText = 'Editar Categoría';
-            document.getElementById('catId').value = cat.id;
-            document.getElementById('catNombre').value = cat.name;
-            document.getElementById('catDescripcion').value = cat.description || '';
-            document.getElementById('modalCategoria').classList.remove('hidden');
-        }
-
-        document.getElementById('formCategoria').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('catId').value;
-            const data = {
-                name: document.getElementById('catNombre').value,
-                description: document.getElementById('catDescripcion').value
-            };
-            const url = id ? `/api/update/${id}` : '/api/create';
-            const method = id ? 'PUT' : 'POST';
-            await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+    // CARGAR CATEGORÍAS EN EL SELECTOR DE FILTRO
+    async function loadFilterCategories() {
+        try {
+            const res = await fetch('/api/categories');
+            const categories = await res.json();
+            const select = document.getElementById('filtro-categoria');
+            
+            // Limpiar y mantener la opción por defecto
+            select.innerHTML = '<option value="">Todas las categorías</option>';
+            categories.forEach(cat => {
+                select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
             });
-            cerrarModalCategoria();
-            loadCategories();
-        };
+        } catch (error) {
+            console.error("Error cargando categorías para filtro:", error);
+        }
+    }
 
-        async function eliminarCategoria(id) {
-            if (confirm('¿Eliminar esta categoría?')) {
-                await fetch(`/api/delete/${id}`, { method: 'DELETE' });
-                loadCategories();
-            }
+    // CARGAR PRODUCTOS
+    async function load() {
+        try {
+            const res = await fetch('/api/products');
+            productos = await res.json();
+            render(productos);
+        } catch (error) {
+            console.error("Error al cargar productos:", error);
+        }
+    }
+
+    // RENDERIZAR TABLA
+    function render(data) {
+        const body = document.getElementById('tabla-body');
+        if (data.length === 0) {
+            body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`;
+            return;
         }
 
-        // --- BUSCADOR ---
-        document.getElementById('busqueda').oninput = (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtrados = productos.filter(p => p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term));
-            renderProductos(filtrados);
-        };
+        body.innerHTML = data.map(p => `
+    <tr class="hover:bg-gray-50 border-b border-gray-100">
+        <td class="p-4">
+            <div class="font-bold text-gray-800">${p.name}</div>
+            <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">
+                ${p.categoryName}
+            </span>
+        </td>
+        <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
+        <td class="p-4 text-center">${p.stock}</td>
+        <td class="p-4 text-right flex justify-end gap-2">
+            <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                ✏️ Editar
+            </button>
+            <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                📊 Historial
+            </a>
+            <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">
+                🗑️ Borrar
+            </button>
+        </td>
+    </tr>
+`).join('');
+    }
 
-        init();
-    </script>
+    // LÓGICA DE FILTRADO COMBINADO
+    function aplicarFiltros() {
+        const term = document.getElementById('busqueda').value.toLowerCase();
+        const catFilter = document.getElementById('filtro-categoria').value;
+
+        const filtrados = productos.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term);
+            const matchesCategory = catFilter === "" || p.categoryName === catFilter;
+            return matchesSearch && matchesCategory;
+        });
+
+        render(filtrados);
+    }
+
+    // EVENTOS DE FILTRO
+    document.getElementById('busqueda').oninput = aplicarFiltros;
+    document.getElementById('filtro-categoria').onchange = aplicarFiltros;
+
+    async function eliminarProducto(id) {
+        if (confirm('¿Estás seguro de eliminar este producto?')) {
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (res.ok) load();
+        }
+    }
+
+    function abrirModalEdicion(p) {
+    const modal = document.getElementById('modalProducto');
+    const form = document.getElementById('formProducto');
+    
+    // Cambiar textos del modal
+    modal.querySelector('h2').innerText = 'Editar Producto (Restringido)';
+    form.querySelector('button[type="submit"]').innerText = 'Actualizar Cambios';
+    
+    // Rellenar campos con los datos actuales
+    // Asegúrate de que los IDs coincidan con los de tu partial modal-producto
+    form.name.value = p.name;
+    form.sku.value = p.sku;
+    form.price.value = p.price;
+    form.stock.value = p.stock;
+    
+    // BLOQUEAR campos que no se pueden cambiar
+    form.name.readOnly = true;
+    form.sku.readOnly = true;
+    form.stock.readOnly = true;
+
+    // Añadir estilo visual de "bloqueado"
+    const readonlyClasses = ['bg-gray-100', 'cursor-not-allowed', 'text-gray-500'];
+    form.name.classList.add(...readonlyClasses);
+    form.sku.classList.add(...readonlyClasses);
+    form.stock.classList.add(...readonlyClasses);
+    
+    // Guardar el ID para saber que es una actualización
+    form.dataset.editId = p.id;
+
+    // Seleccionar la categoría actual
+    setTimeout(() => {
+        const select = form.querySelector('select[name="categoryId"]');
+        if (select) select.value = p.categoryId || "";
+    }, 100);
+
+    modal.classList.remove('hidden');
+}
+
+// Función para limpiar el modal y desbloquear campos para un NUEVO producto
+function abrirModalNuevo() {
+    const modal = document.getElementById('modalProducto');
+    const form = document.getElementById('formProducto');
+    
+    form.reset();
+    delete form.dataset.editId;
+
+    // Quitar el estado de Solo Lectura
+    form.name.readOnly = false;
+    form.sku.readOnly = false;
+    form.stock.readOnly = false;
+
+    // Quitar estilos de bloqueo
+    const readonlyClasses = ['bg-gray-100', 'cursor-not-allowed', 'text-gray-500'];
+    form.name.classList.remove(...readonlyClasses);
+    form.sku.classList.remove(...readonlyClasses);
+    form.stock.classList.remove(...readonlyClasses);
+
+    modal.querySelector('h2').innerText = 'Nuevo Producto';
+    form.querySelector('button[type="submit"]').innerText = 'Guardar en Inventario';
+    
+    modal.classList.remove('hidden');
+}
+
+    // INICIO
+    load();
+    loadFilterCategories();
+</script>
 </body>
 </html>

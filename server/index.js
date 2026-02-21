@@ -2,8 +2,6 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
 import { PORT, SECRET_JWT_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
@@ -11,10 +9,6 @@ import { CategoryRepository } from './category-repository.js'
 import productRoutes from './routes/productRoutes.js'
 import movementRoutes from './routes/movementRoutes.js'
 import { db } from './firebase.js'
-
-// Configuración de rutas absolutas
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const app = express()
 
@@ -24,7 +18,6 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, '../views'))
 
 // --- MIDDLEWARE DE SESIÓN ---
 app.use((req, res, next) => {
@@ -51,6 +44,12 @@ app.get('/dashboard', (req, res) => {
   res.render('dashboard', { user })
 })
 
+app.get('/categories', (req, res) => {
+  const { user } = req.session
+  if (!user) return res.redirect('/')
+  res.render('categories', { user })
+})
+
 app.get('/producto/:id', async (req, res) => {
   const { user } = req.session
   if (!user) return res.redirect('/')
@@ -58,7 +57,7 @@ app.get('/producto/:id', async (req, res) => {
     const { id } = req.params
     const productDoc = await db.collection('products').doc(id).get()
     if (!productDoc.exists) return res.status(404).send('Producto no encontrado')
-    
+
     const movementsSnapshot = await db.collection('movements').where('productId', '==', id).get()
     const movimientos = movementsSnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))

@@ -3,79 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso</title>
+  <title>NodeStock - Acceso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .container { display: flex; flex-direction: column; align-items: center; }
-    .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 320px; }
-    
-    /* Estilo de Pestañas */
-    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; }
-    .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #666; font-weight: bold; }
-    .tab.active { color: #28a745; border-bottom: 2px solid #28a745; }
-    
-    .hidden { display: none; } /* Para ocultar el form que no se usa */
-
-    form h2 { margin-bottom: 20px; font-size: 24px; text-align: center; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; }
-    button { width: 100%; padding: 10px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-    span { display: block; margin-top: 10px; text-align: center; min-height: 1.2em; }
+    /* Clases de estado dinámico compatibles con tu JS */
+    .tab.active { @apply text-indigo-600 border-b-2 border-indigo-600; }
+    .hidden { display: none; }
   </style>
 </head>
-<body>
-  <div class="container">
+<body class="bg-gray-100 font-sans flex justify-center items-center h-screen m-0 p-4">
+
+  <div class="flex flex-col items-center w-full">
+    <div class="mb-8 text-center">
+        <h1 class="text-3xl font-bold text-gray-800">📦 NodeStock</h1>
+        <p class="text-gray-500">Gestión de Inventario Profesional</p>
+    </div>
     
     <% if (typeof username !== 'undefined') { %>
-      <div class="form-container">
-        <h2 style="margin: 0;">Hola, <%= username %>!</h2>
-        <p style="text-align: center;">Sigues en el panel de administración</p>
-        <button style="margin-bottom: 12px; background-color: #007bff;" id="GoBack">Volver a la parte protegida</button>
-        <button id="close-session">Cerrar sesión</button>
+      <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 w-full max-w-sm">
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">¡Hola, <%= username %>!</h2>
+        <p class="text-center text-gray-600 mb-6 text-sm">Ya tienes una sesión activa en el sistema.</p>
+        
+        <button id="GoBack" class="w-full py-2.5 mb-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-all shadow-md">
+          Ir al Panel de Control
+        </button>
+        
+        <button id="close-session" class="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-semibold border border-red-200 transition-all">
+          Cerrar sesión
+        </button>
       </div>
     <% } %>
 
     <% if (typeof username === 'undefined') { %>
-      <div class="form-container">
-        <div class="tabs">
-          <div id="tab-login" class="tab active">Login</div>
-          <div id="tab-register" class="tab">Registro</div>
+      <div class="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-sm overflow-hidden">
+        
+        <div class="flex border-b border-gray-100 bg-gray-50/50">
+          <div id="tab-login" class="tab active flex-1 py-4 text-center cursor-pointer font-bold text-gray-400 transition-all hover:text-indigo-500">
+            Login
+          </div>
+          <div id="tab-register" class="tab flex-1 py-4 text-center cursor-pointer font-bold text-gray-400 transition-all hover:text-indigo-500">
+            Registro
+          </div>
         </div>
 
-        <div id="login-section">
-          <form id="login-form">
-            <h2>Login</h2>
-            <label for="login-username">Username</label>
-            <input id="login-username" name="username" required>
-            <label for="login-password">Password</label>
-            <input type="password" id="login-password" name="password" required>
-            <button type="submit">Login</button>
-            <span>&nbsp;</span>
-          </form>
-        </div>
+        <div class="p-8">
+            <div id="login-section">
+              <form id="login-form">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Bienvenido</h2>
+                
+                <div class="mb-4">
+                    <label for="login-username" class="block mb-1 text-sm font-semibold text-gray-600">Usuario</label>
+                    <input id="login-username" name="username" required 
+                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="login-password" class="block mb-1 text-sm font-semibold text-gray-600">Contraseña</label>
+                    <input type="password" id="login-password" name="password" required 
+                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+                </div>
+                
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-all">
+                  Ingresar al sistema
+                </button>
+                <span class="block mt-4 text-center min-h-[1.5em] text-sm font-medium"></span>
+              </form>
+            </div>
 
-        <div id="register-section" class="hidden">
-          <form id="register-form">
-            <h2>Register</h2>
-            <label for="register-username">Username</label>
-            <input id="register-username" name="username" required>
-            <label for="register-password">Password</label>
-            <input type="password" id="register-password" name="password" required>
-            <label for="register-confirm-password">Confirm password</label>
-            <input type="password" id="register-confirm-password" name="password" required>
-            <button type="submit">Register</button>
-            <span>&nbsp;</span>
-          </form>
+            <div id="register-section" class="hidden">
+              <form id="register-form">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Crear cuenta</h2>
+                
+                <div class="mb-4">
+                    <label for="register-username" class="block mb-1 text-sm font-semibold text-gray-600">Nuevo Usuario</label>
+                    <input id="register-username" name="username" required 
+                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="register-password" class="block mb-1 text-sm font-semibold text-gray-600">Contraseña</label>
+                    <input type="password" id="register-password" name="password" required 
+                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="register-confirm-password" class="block mb-1 text-sm font-semibold text-gray-600">Confirmar contraseña</label>
+                    <input type="password" id="register-confirm-password" name="password" required 
+                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+                </div>
+                
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-all">
+                  Registrarme ahora
+                </button>
+                <span class="block mt-4 text-center min-h-[1.5em] text-sm font-medium"></span>
+              </form>
+            </div>
         </div>
       </div>
     <% } %>
   </div>
 
   <script>
+    // --- MANTENEMOS TU LÓGICA ORIGINAL ---
     const $ = el => document.querySelector(el)
 
-    // --- LÓGICA DE PESTAÑAS (Intercambio visual) ---
     const $tabLogin = $('#tab-login')
     const $tabRegister = $('#tab-register')
     const $loginSection = $('#login-section')
@@ -91,7 +122,6 @@
       $registerSection.classList.remove('hidden'); $loginSection.classList.add('hidden');
     })
 
-    // --- TU LÓGICA ORIGINAL (SIN TOCAR NADA) ---
     const $loginForm = $('#login-form')
     const $loginSpan = $('#login-form span')
     const $registerForm = $('#register-form')
@@ -110,11 +140,11 @@
       .then(res => {
         if (res.ok) {
           $loginSpan.innerText = 'Sesión iniciada. Entrando...'
-          $loginSpan.style.color = 'green'
+          $loginSpan.className = 'block mt-4 text-center text-green-600 font-bold';
           setTimeout(() => { window.location.href = '/dashboard' }, 1500);
         } else {
           $loginSpan.innerText = 'Error al iniciar sesión'
-          $loginSpan.style.color = 'red'
+          $loginSpan.className = 'block mt-4 text-center text-red-500 font-bold';
         }
       })
     })
@@ -133,19 +163,19 @@
       })
       .then(res => {
         if (res.ok) {
-          $registerSpan.innerText = 'Usuario registrado. Entrando...'
-          $registerSpan.style.color = 'green'
+          $registerSpan.innerText = 'Usuario registrado. Redirigiendo...'
+          $registerSpan.className = 'block mt-4 text-center text-green-600 font-bold';
           setTimeout(() => { window.location.href = '/' }, 1500);
         } else {
           $registerSpan.innerText = 'Error al registrar usuario'
-          $registerSpan.style.color = 'red'
+          $registerSpan.className = 'block mt-4 text-center text-red-500 font-bold';
         }
       })
     })
 
     $logoutButton?.addEventListener('click', e => {
       e.preventDefault()
-      fetch('/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      fetch('/logout', { method: 'GET', headers: { 'Content-Type': 'application/json' } })
       .then(res => { window.location.href = '/' })
     })
 
