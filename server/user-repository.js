@@ -10,19 +10,16 @@ export class UserRepository {
     Validation.username(username)
     Validation.password(password)
 
-    // Verificar si el username ya existe
     const snapshot = await usersCollection
       .where('username', '==', username)
       .limit(1)
       .get()
 
     if (!snapshot.empty) {
-      throw new Error('Username already exists')
+      throw new Error('Username (email) already exists')
     }
 
-    // Crear usuario
     const id = crypto.randomUUID()
-
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
     await usersCollection.doc(id).set({
@@ -61,11 +58,20 @@ export class UserRepository {
 class Validation {
   static username (username) {
     if (typeof username !== 'string') throw new Error('Username must be a string')
-    if (username.length < 3) throw new Error('Username must be at least 3 characters long')
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (!emailRegex.test(username)) {
+      throw new Error('Username must be a valid email (e.g., user@domain.com)')
+    }
   }
 
   static password (password) {
     if (typeof password !== 'string') throw new Error('Password must be a string')
-    if (password.length < 6) throw new Error('Password must be at least 6 characters long')
+
+    // Requisitos: 8 caracteres, 1 número, 1 mayúscula
+    if (password.length < 8) throw new Error('Password must be at least 8 characters long')
+    if (!/\d/.test(password)) throw new Error('Password must include at least one number')
+    if (!/[A-Z]/.test(password)) throw new Error('Password must include at least one uppercase letter')
   }
 }

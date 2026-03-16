@@ -53,13 +53,13 @@
                 
                 <div class="mb-4">
                     <label for="login-username" class="block mb-1 text-sm font-semibold text-gray-600">Usuario</label>
-                    <input id="login-username" name="username" required 
+                    <input id="login-username" placeholder="Nombre de usuario" name="username" required 
                         class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
                 </div>
                 
                 <div class="mb-6">
                     <label for="login-password" class="block mb-1 text-sm font-semibold text-gray-600">Contraseña</label>
-                    <input type="password" id="login-password" name="password" required 
+                    <input type="password" id="login-password" placeholder="Contraseña" name="password" required 
                         class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
                 </div>
                 
@@ -76,19 +76,23 @@
                 
                 <div class="mb-4">
                     <label for="register-username" class="block mb-1 text-sm font-semibold text-gray-600">Nuevo Usuario</label>
-                    <input id="register-username" name="username" required 
+                    <input id="register-username" placeholder="Nombre de usuario o Correo electrónico" name="username" required 
                         class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
                 </div>
                 
                 <div class="mb-4">
                     <label for="register-password" class="block mb-1 text-sm font-semibold text-gray-600">Contraseña</label>
-                    <input type="password" id="register-password" name="password" required 
+                    <input type="password" id="register-password" placeholder="Contraseña" name="password" required 
                         class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
+
+                        <p id="password-help" class="mt-1 text-xs text-gray-500">
+                          Debe tener al menos 8 caracteres, incluir una mayúscula y un número.
+                        </p>
                 </div>
                 
                 <div class="mb-6">
                     <label for="register-confirm-password" class="block mb-1 text-sm font-semibold text-gray-600">Confirmar contraseña</label>
-                    <input type="password" id="register-confirm-password" name="password" required 
+                    <input type="password" id="register-confirm-password" placeholder="Confirmar contraseña" name="confirmPassword" required 
                         class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
                 </div>
                 
