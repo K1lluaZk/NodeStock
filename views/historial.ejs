@@ -5,6 +5,7 @@
     <title>Historial - <%= producto.name %></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/table2excel@1.0.4/dist/table2excel.min.js"></script>
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto p-8">
@@ -12,16 +13,24 @@
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border text-center lg:text-left">
-                <h1 class="text-2xl font-bold text-gray-800"><%= producto.name %></h1>
+                <h1 id="productName" class="text-2xl font-bold text-gray-800"><%= producto.name %></h1>
                 <p class="text-gray-500 font-mono">SKU: <%= producto.sku %></p>
                 <div class="mt-4">
                     <span class="text-5xl font-extrabold text-indigo-600"><%= producto.stock %></span>
                     <p class="text-gray-500 mt-1">unidades en inventario</p>
                 </div>
-                <button onclick="document.getElementById('modalMovimiento').classList.remove('hidden')" 
-                        class="w-full mt-6 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                    Registrar Movimiento
-                </button>
+                
+                <div class="flex flex-col gap-2 mt-6">
+                    <button onclick="document.getElementById('modalMovimiento').classList.remove('hidden')" 
+                            class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-bold">
+                        Registrar Movimiento
+                    </button>
+                    
+                    <button onclick="exportarHistorial()" 
+                            class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-bold flex items-center justify-center gap-2">
+                        📥 Descargar Excel
+                    </button>
+                </div>
             </div>
 
             <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
@@ -31,7 +40,7 @@
         </div>
 
         <div class="mt-8 bg-white rounded-xl shadow-sm border overflow-hidden">
-            <table class="w-full text-left">
+            <table id="tabla-historial" class="w-full text-left">
                 <thead class="bg-gray-100 border-b">
                     <tr class="text-gray-600 text-sm">
                         <th class="p-4">Fecha y Hora</th>
@@ -67,13 +76,20 @@
     <%- include('partials/modal-movimiento', { productoId: producto.id }) %>
 
     <script>
-        // Inyectamos los datos con comillas para evitar errores de sintaxis en el editor
-        const movsRaw = JSON.parse('<%- JSON.stringify(movimientos) %>');
         
-        // Reversamos para que el gráfico sea cronológico (viejo -> nuevo)
+        function exportarHistorial() {
+            const table = document.getElementById("tabla-historial");
+            const productName = document.getElementById("productName").innerText;
+            const table2excel = new Table2Excel();
+            
+            
+            table2excel.export(table, "Historial_" + productName.replace(/\s+/g, '_') + "_" + new Date().toISOString().split('T')[0]);
+        }
+
+        // --- LÓGICA DEL GRÁFICO (Chart.js) ---
+        const movsRaw = JSON.parse('<%- JSON.stringify(movimientos) %>');
         const movsOrdenados = [...movsRaw].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        // Calculamos el historial acumulado para la línea del gráfico
         let acumulado = 0;
         const dataPuntos = movsOrdenados.map(m => {
             acumulado = (m.type === 'IN') ? (acumulado + Number(m.quantity)) : (acumulado - Number(m.quantity));
@@ -84,7 +100,6 @@
             return new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
         });
 
-        // Configuración del Gráfico de Chart.js
         const ctx = document.getElementById('stockChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',

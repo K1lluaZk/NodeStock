@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>NodeStock - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/table2excel@1.0.4/dist/table2excel.min.js"></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="max-w-6xl mx-auto">
@@ -31,20 +32,27 @@
                 </select>
             </div>
             
-            <button onclick="abrirModalNuevo()" 
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
-                <span>+</span> Nuevo Producto
-            </button>
+            <div class="flex gap-3">
+                <button onclick="exportarStock()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
+                    📊 Exportar Excel
+                </button>
+
+                <button onclick="abrirModalNuevo()" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
+                    <span>+</span> Nuevo Producto
+                </button>
+            </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-            <table class="w-full text-left">
+            <table id="tabla-inventario" class="w-full text-left">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr class="text-gray-600 text-sm uppercase tracking-wider">
                         <th class="p-4 font-semibold">Producto</th>
                         <th class="p-4 font-semibold text-center">SKU</th>
                         <th class="p-4 text-center font-semibold">Stock</th>
-                        <th class="p-4 text-right font-semibold">Acciones</th>
+                        <th class="p-4 text-right font-semibold export-ignore">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-body" class="divide-y divide-gray-100"></tbody>
@@ -57,7 +65,22 @@
 <script>
     let productos = [];
 
-    // CERRAR SESIÓN
+    // --- FUNCIONES DE EXPORTACIÓN ---
+    function exportarStock() {
+        const table = document.getElementById("tabla-inventario");
+        
+        // Ocultar columna de acciones (la última) para el Excel
+        const acciones = table.querySelectorAll('th:last-child, td:last-child');
+        acciones.forEach(el => el.style.display = 'none');
+
+        const table2excel = new Table2Excel();
+        table2excel.export(table, "Inventario_NodeStock_" + new Date().toISOString().split('T')[0]);
+
+        // Volver a mostrar las acciones en la pantalla
+        acciones.forEach(el => el.style.display = '');
+    }
+
+    // --- SESIÓN Y CARGA ---
     document.getElementById('btn-logout').addEventListener('click', async () => {
         try {
             const res = await fetch('/logout', { method: 'GET' });
@@ -67,24 +90,20 @@
         }
     });
 
-    // CARGAR CATEGORÍAS EN EL SELECTOR DE FILTRO
     async function loadFilterCategories() {
         try {
             const res = await fetch('/api/categories');
             const categories = await res.json();
             const select = document.getElementById('filtro-categoria');
-            
-            // Limpiar y mantener la opción por defecto
             select.innerHTML = '<option value="">Todas las categorías</option>';
             categories.forEach(cat => {
                 select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
             });
         } catch (error) {
-            console.error("Error cargando categorías para filtro:", error);
+            console.error("Error cargando categorías:", error);
         }
     }
 
-    // CARGAR PRODUCTOS
     async function load() {
         try {
             const res = await fetch('/api/products');
@@ -95,7 +114,6 @@
         }
     }
 
-    // RENDERIZAR TABLA
     function render(data) {
         const body = document.getElementById('tabla-body');
         if (data.length === 0) {
@@ -104,31 +122,31 @@
         }
 
         body.innerHTML = data.map(p => `
-    <tr class="hover:bg-gray-50 border-b border-gray-100">
-        <td class="p-4">
-            <div class="font-bold text-gray-800">${p.name}</div>
-            <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">
-                ${p.categoryName}
-            </span>
-        </td>
-        <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
-        <td class="p-4 text-center">${p.stock}</td>
-        <td class="p-4 text-right flex justify-end gap-2">
-            <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                ✏️ Editar
-            </button>
-            <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                📊 Historial
-            </a>
-            <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">
-                🗑️ Borrar
-            </button>
-        </td>
-    </tr>
-`).join('');
+            <tr class="hover:bg-gray-50 border-b border-gray-100">
+                <td class="p-4">
+                    <div class="font-bold text-gray-800">${p.name}</div>
+                    <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">
+                        ${p.categoryName}
+                    </span>
+                </td>
+                <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
+                <td class="p-4 text-center">${p.stock}</td>
+                <td class="p-4 text-right flex justify-end gap-2 export-ignore">
+                    <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                        ✏️ Editar
+                    </button>
+                    <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                        📊 Historial
+                    </a>
+                    <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">
+                        🗑️ Borrar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
     }
 
-    // LÓGICA DE FILTRADO COMBINADO
+    // --- FILTROS ---
     function aplicarFiltros() {
         const term = document.getElementById('busqueda').value.toLowerCase();
         const catFilter = document.getElementById('filtro-categoria').value;
@@ -138,85 +156,55 @@
             const matchesCategory = catFilter === "" || p.categoryName === catFilter;
             return matchesSearch && matchesCategory;
         });
-
         render(filtrados);
     }
 
-    // EVENTOS DE FILTRO
     document.getElementById('busqueda').oninput = aplicarFiltros;
     document.getElementById('filtro-categoria').onchange = aplicarFiltros;
 
+    // --- MODALES ---
+    function abrirModalEdicion(p) {
+        const modal = document.getElementById('modalProducto');
+        const form = document.getElementById('formProducto');
+        modal.querySelector('h2').innerText = 'Editar Producto';
+        form.name.value = p.name;
+        form.sku.value = p.sku;
+        form.price.value = p.price;
+        form.stock.value = p.stock;
+        
+        // Bloqueo de campos
+        [form.name, form.sku, form.stock].forEach(el => {
+            el.readOnly = true;
+            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+        });
+
+        form.dataset.editId = p.id;
+        modal.classList.remove('hidden');
+    }
+
+    function abrirModalNuevo() {
+        const modal = document.getElementById('modalProducto');
+        const form = document.getElementById('formProducto');
+        form.reset();
+        delete form.dataset.editId;
+
+        [form.name, form.sku, form.stock].forEach(el => {
+            el.readOnly = false;
+            el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+        });
+
+        modal.querySelector('h2').innerText = 'Nuevo Producto';
+        modal.classList.remove('hidden');
+    }
+
     async function eliminarProducto(id) {
-        if (confirm('¿Estás seguro de eliminar este producto?')) {
+        if (confirm('¿Eliminar este producto?')) {
             const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
             if (res.ok) load();
         }
     }
 
-    function abrirModalEdicion(p) {
-    const modal = document.getElementById('modalProducto');
-    const form = document.getElementById('formProducto');
-    
-    // Cambiar textos del modal
-    modal.querySelector('h2').innerText = 'Editar Producto (Restringido)';
-    form.querySelector('button[type="submit"]').innerText = 'Actualizar Cambios';
-    
-    // Rellenar campos con los datos actuales
-    // Asegúrate de que los IDs coincidan con los de tu partial modal-producto
-    form.name.value = p.name;
-    form.sku.value = p.sku;
-    form.price.value = p.price;
-    form.stock.value = p.stock;
-    
-    // BLOQUEAR campos que no se pueden cambiar
-    form.name.readOnly = true;
-    form.sku.readOnly = true;
-    form.stock.readOnly = true;
-
-    // Añadir estilo visual de "bloqueado"
-    const readonlyClasses = ['bg-gray-100', 'cursor-not-allowed', 'text-gray-500'];
-    form.name.classList.add(...readonlyClasses);
-    form.sku.classList.add(...readonlyClasses);
-    form.stock.classList.add(...readonlyClasses);
-    
-    // Guardar el ID para saber que es una actualización
-    form.dataset.editId = p.id;
-
-    // Seleccionar la categoría actual
-    setTimeout(() => {
-        const select = form.querySelector('select[name="categoryId"]');
-        if (select) select.value = p.categoryId || "";
-    }, 100);
-
-    modal.classList.remove('hidden');
-}
-
-// Función para limpiar el modal y desbloquear campos para un NUEVO producto
-function abrirModalNuevo() {
-    const modal = document.getElementById('modalProducto');
-    const form = document.getElementById('formProducto');
-    
-    form.reset();
-    delete form.dataset.editId;
-
-    // Quitar el estado de Solo Lectura
-    form.name.readOnly = false;
-    form.sku.readOnly = false;
-    form.stock.readOnly = false;
-
-    // Quitar estilos de bloqueo
-    const readonlyClasses = ['bg-gray-100', 'cursor-not-allowed', 'text-gray-500'];
-    form.name.classList.remove(...readonlyClasses);
-    form.sku.classList.remove(...readonlyClasses);
-    form.stock.classList.remove(...readonlyClasses);
-
-    modal.querySelector('h2').innerText = 'Nuevo Producto';
-    form.querySelector('button[type="submit"]').innerText = 'Guardar en Inventario';
-    
-    modal.classList.remove('hidden');
-}
-
-    // INICIO
+    // Inicio
     load();
     loadFilterCategories();
 </script>
