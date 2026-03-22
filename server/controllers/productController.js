@@ -66,19 +66,19 @@ export const productController = {
             res.status(200).json({ message: "Producto actualizado" });
         } catch (error) {
             res.status(500).json({ error: error.message });
-        }
-    },
+}
+  },
 
   // Eliminar Producto
   deleteProduct: async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params
       // Usamos la constante 'collection' para mantener consistencia
-      await collection.doc(id).delete();
-      res.status(200).json({ message: "Eliminado con éxito" });
+      await collection.doc(id).delete()
+      res.status(200).json({ message: "Eliminado con éxito" })
     } catch (error) {
       // Si llega aquí, el frontend recibirá un 500 y mostrará el alert de error
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message })
     }
   }
-};
+}

@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import { categoryController } from '../controllers/categoryController.js';
+import { Router } from 'express'
+import { categoryController } from '../controllers/categoryController.js'
 
-const router = Router();
+const router = Router()
 
-router.get('/', categoryController.getAll);
-router.post('/', categoryController.create);
-router.delete('/:id', categoryController.delete);
+router.get('/', categoryController.getAll)
+router.post('/', categoryController.create)
+router.delete('/:id', categoryController.delete)
 
-export default router;
+export default router

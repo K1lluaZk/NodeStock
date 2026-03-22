@@ -15,31 +15,47 @@
                 <a href="/categories" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all shadow-sm">
                     📁 Categorías
                 </a>
-
                 <button id="btn-logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold border border-red-200 transition-all">
                     Logout
                 </button>
             </div>
         </div>
 
+        <div id="alerta-stock" class="hidden mb-6">
+            <div class="bg-red-600 text-white p-4 rounded-xl shadow-lg flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl animate-bounce">⚠️</span>
+                    <div>
+                        <p class="font-bold">¡Atención! Hay productos con stock bajo.</p>
+                        <p class="text-sm opacity-90">Revisa los elementos marcados en rojo.</p>
+                    </div>
+                </div>
+                <button onclick="filtrarStockCritico()" class="bg-white text-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-50 transition-colors shadow-md">
+                    Ver Críticos
+                </button>
+            </div>
+        </div>
+
         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div class="flex gap-2 w-full md:w-auto">
+            <div class="flex items-center gap-2 w-full md:w-auto">
                 <input type="text" id="busqueda" placeholder="Buscar nombre o SKU..." 
                     class="border border-gray-300 p-2 rounded-lg w-full md:w-64 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
                 
                 <select id="filtro-categoria" class="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm bg-white">
                     <option value="">Todas las categorías</option>
                 </select>
+
+                <button id="btn-limpiar" onclick="limpiarFiltros()" 
+                    class="hidden bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2 whitespace-nowrap">
+                    ✕ Ver todos
+                </button>
             </div>
             
             <div class="flex gap-3">
-                <button onclick="exportarStock()" 
-                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
+                <button onclick="exportarStock()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md flex items-center gap-2">
                     📊 Exportar Excel
                 </button>
-
-                <button onclick="abrirModalNuevo()" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md flex items-center gap-2">
+                <button onclick="abrirModalNuevo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md flex items-center gap-2">
                     <span>+</span> Nuevo Producto
                 </button>
             </div>
@@ -64,31 +80,17 @@
 
 <script>
     let productos = [];
+    const UMBRAL_STOCK = 5;
 
-    // --- FUNCIONES DE EXPORTACIÓN ---
-    function exportarStock() {
-        const table = document.getElementById("tabla-inventario");
-        
-        // Ocultar columna de acciones (la última) para el Excel
-        const acciones = table.querySelectorAll('th:last-child, td:last-child');
-        acciones.forEach(el => el.style.display = 'none');
-
-        const table2excel = new Table2Excel();
-        table2excel.export(table, "Inventario_NodeStock_" + new Date().toISOString().split('T')[0]);
-
-        // Volver a mostrar las acciones en la pantalla
-        acciones.forEach(el => el.style.display = '');
-    }
-
-    // --- SESIÓN Y CARGA ---
-    document.getElementById('btn-logout').addEventListener('click', async () => {
+    // --- CARGA INICIAL ---
+    async function load() {
         try {
-            const res = await fetch('/logout', { method: 'GET' });
-            if (res.ok) window.location.href = '/';
-        } catch (error) {
-            console.error("Error al cerrar sesión:", error);
-        }
-    });
+            const res = await fetch('/api/products');
+            productos = await res.json();
+            render(productos);
+            revisarStockGlobal();
+        } catch (error) { console.error(error); }
+    }
 
     async function loadFilterCategories() {
         try {
@@ -99,54 +101,55 @@
             categories.forEach(cat => {
                 select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
             });
-        } catch (error) {
-            console.error("Error cargando categorías:", error);
-        }
+        } catch (error) { console.error(error); }
     }
 
-    async function load() {
-        try {
-            const res = await fetch('/api/products');
-            productos = await res.json();
-            render(productos);
-        } catch (error) {
-            console.error("Error al cargar productos:", error);
-        }
+    function revisarStockGlobal() {
+        const hayStockBajo = productos.some(p => p.stock <= UMBRAL_STOCK);
+        document.getElementById('alerta-stock').classList.toggle('hidden', !hayStockBajo);
     }
 
     function render(data) {
         const body = document.getElementById('tabla-body');
+        const btnLimpiar = document.getElementById('btn-limpiar');
+        
+        // Mostrar botón de "Ver todos" si la lista está filtrada
+        if (data.length === productos.length) {
+            btnLimpiar.classList.add('hidden');
+            } else {
+            btnLimpiar.classList.remove('hidden');
+            }   
+
         if (data.length === 0) {
             body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`;
             return;
         }
 
-        body.innerHTML = data.map(p => `
-            <tr class="hover:bg-gray-50 border-b border-gray-100">
-                <td class="p-4">
-                    <div class="font-bold text-gray-800">${p.name}</div>
-                    <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">
-                        ${p.categoryName}
-                    </span>
-                </td>
-                <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
-                <td class="p-4 text-center">${p.stock}</td>
-                <td class="p-4 text-right flex justify-end gap-2 export-ignore">
-                    <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">
-                        ✏️ Editar
-                    </button>
-                    <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                        📊 Historial
-                    </a>
-                    <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">
-                        🗑️ Borrar
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        body.innerHTML = data.map(p => {
+            const esCritico = p.stock <= UMBRAL_STOCK;
+            return `
+                <tr class="${esCritico ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'} border-b border-gray-100 transition-colors">
+                    <td class="p-4">
+                        <div class="font-bold text-gray-800">${p.name}</div>
+                        <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">${p.categoryName}</span>
+                    </td>
+                    <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
+                    <td class="p-4 text-center">
+                        <span class="${esCritico ? 'text-red-600 font-bold animate-pulse' : 'text-gray-700'} flex items-center justify-center gap-1">
+                            ${esCritico ? '⚠️' : ''} ${p.stock}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right flex justify-end gap-2 export-ignore">
+                        <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">✏️ Editar</button>
+                        <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">📊 Historial</a>
+                        <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">🗑️ Borrar</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    // --- FILTROS ---
+    // --- LÓGICA DE FILTROS ---
     function aplicarFiltros() {
         const term = document.getElementById('busqueda').value.toLowerCase();
         const catFilter = document.getElementById('filtro-categoria').value;
@@ -159,42 +162,59 @@
         render(filtrados);
     }
 
+    function filtrarStockCritico() {
+        const criticos = productos.filter(p => p.stock <= UMBRAL_STOCK);
+        render(criticos);
+    }
+
+    function limpiarFiltros() {
+        document.getElementById('busqueda').value = "";
+        document.getElementById('filtro-categoria').value = "";
+        render(productos);
+    }
+
     document.getElementById('busqueda').oninput = aplicarFiltros;
     document.getElementById('filtro-categoria').onchange = aplicarFiltros;
 
-    // --- MODALES ---
-    function abrirModalEdicion(p) {
-        const modal = document.getElementById('modalProducto');
-        const form = document.getElementById('formProducto');
-        modal.querySelector('h2').innerText = 'Editar Producto';
-        form.name.value = p.name;
-        form.sku.value = p.sku;
-        form.price.value = p.price;
-        form.stock.value = p.stock;
-        
-        // Bloqueo de campos
-        [form.name, form.sku, form.stock].forEach(el => {
-            el.readOnly = true;
-            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-        });
-
-        form.dataset.editId = p.id;
-        modal.classList.remove('hidden');
+    // --- EXPORTAR EXCEL ---
+    function exportarStock() {
+        const table = document.getElementById("tabla-inventario");
+        const acciones = table.querySelectorAll('th:last-child, td:last-child');
+        acciones.forEach(el => el.style.display = 'none');
+        new Table2Excel().export(table, "Inventario_" + new Date().toISOString().split('T')[0]);
+        acciones.forEach(el => el.style.display = '');
     }
 
+    // --- LOGOUT ---
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+        const res = await fetch('/logout', { method: 'GET' });
+        if (res.ok) window.location.href = '/';
+    });
+
+    // --- MODALES (NUEVO/EDITAR) ---
     function abrirModalNuevo() {
-        const modal = document.getElementById('modalProducto');
         const form = document.getElementById('formProducto');
         form.reset();
         delete form.dataset.editId;
-
         [form.name, form.sku, form.stock].forEach(el => {
             el.readOnly = false;
             el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
         });
+        document.getElementById('modalProducto').classList.remove('hidden');
+    }
 
-        modal.querySelector('h2').innerText = 'Nuevo Producto';
-        modal.classList.remove('hidden');
+    function abrirModalEdicion(p) {
+        const form = document.getElementById('formProducto');
+        form.name.value = p.name;
+        form.sku.value = p.sku;
+        form.price.value = p.price;
+        form.stock.value = p.stock;
+        [form.name, form.sku, form.stock].forEach(el => {
+            el.readOnly = true;
+            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+        });
+        form.dataset.editId = p.id;
+        document.getElementById('modalProducto').classList.remove('hidden');
     }
 
     async function eliminarProducto(id) {
