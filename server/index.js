@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 
-import { PORT, SECRET_JWT_KEY } from './config.js'
+import { PORT, SECRET_JWT_KEY, REFRESH_SECRET_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
 import { CategoryRepository } from './category-repository.js'
 import productRoutes from './routes/productRoutes.js'
@@ -20,13 +20,51 @@ app.use(cookieParser())
 app.set('view engine', 'ejs')
 
 // --- MIDDLEWARE DE SESIÓN ---
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   const token = req.cookies.access_token
+  const refreshToken = req.cookies.refresh_token
+
   req.session = { user: null }
-  try {
-    const data = jwt.verify(token, SECRET_JWT_KEY)
-    req.session.user = data
-  } catch {}
+
+  // 1. Intentar validar el Access Token
+  if (token) {
+    try {
+      const data = jwt.verify(token, SECRET_JWT_KEY)
+      req.session.user = data
+      return next()
+    } catch (err) {
+      // Token expirado o inválido, pasamos al intento de refresh
+    }
+  }
+
+  // 2. Si falló el Access, intentar con el Refresh Token
+  if (refreshToken) {
+    try {
+      const data = jwt.verify(refreshToken, REFRESH_SECRET_KEY)
+
+      // Si el refresh es válido, generamos un nuevo Access Token inmediatamente
+      const newAccessToken = jwt.sign(
+        { id: data.id, username: data.username },
+        SECRET_JWT_KEY,
+        { expiresIn: '15m' } // 15 minutos para uso normal
+      )
+
+      // Actualizamos la cookie del Access Token
+      res.cookie('access_token', newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      })
+
+      req.session.user = data
+      console.log('✅ Sesión restaurada automáticamente por el servidor')
+      return next()
+    } catch (refreshErr) {
+      console.log('Refresh token inválido o expirado')
+    }
+  }
+
   next()
 })
 
@@ -118,15 +156,61 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body
   try {
     const user = await UserRepository.login({ username, password })
-    const token = jwt.sign({ id: user._id, username: user.username }, SECRET_JWT_KEY, { expiresIn: '1h' })
-    res.cookie('access_token', token, {
+
+    const tokenPayload = { id: user._id, username: user.username }
+
+    // 1. Access Token (15 min)
+    const accessToken = jwt.sign(tokenPayload, SECRET_JWT_KEY, { expiresIn: '15m' })
+
+    // 2. Refresh Token (7 días)
+    const refreshToken = jwt.sign(tokenPayload, REFRESH_SECRET_KEY, { expiresIn: '7d' })
+
+    // --- GUARDAR ACCESS TOKEN EN COOKIE ---
+    res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 1000 * 60 * 60
-    }).send({ user, token })
+      // maxAge: 15 * 1000 // 15 segundos para pruebas en produccion
+      maxAge: 15 * 60 * 1000 // 15 minutos
+    })
+
+    // --- GUARDAR REFRESH TOKEN EN COOKIE ---
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
+    })
+
+    res.send({ user, accessToken }) // Mantener esto por si el frontend lo necesita
   } catch (error) {
     res.status(401).send(error.message)
+  }
+})
+
+app.post('/auth/refresh', (req, res) => {
+  const refreshToken = req.cookies.refresh_token
+  if (!refreshToken) return res.status(401).json({ message: 'No hay token de refresco' })
+
+  try {
+    const data = jwt.verify(refreshToken, REFRESH_SECRET_KEY)
+    const newAccessToken = jwt.sign(
+      { id: data.id, username: data.username },
+      SECRET_JWT_KEY,
+      { expiresIn: '15m' }
+    )
+
+    // ACTUALIZAR LA COOKIE PARA LAS VISTAS
+    res.cookie('access_token', newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    })
+
+    res.json({ accessToken: newAccessToken })
+  } catch (e) {
+    res.status(403).json({ message: 'Refresh token inválido o expirado' })
   }
 })
 
@@ -141,7 +225,8 @@ app.post('/register', async (req, res) => {
 })
 
 app.get('/logout', (req, res) => {
-  res.clearCookie('access_token').redirect('/')
+  res.clearCookie('access_token')
+  res.clearCookie('refresh_token').redirect('/')
 })
 
 app.listen(PORT, () => {
