@@ -37,19 +37,19 @@
 
 <script>
     document.getElementById('formMovimiento').onsubmit = async (e) => {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target));
+        e.preventDefault()
+        const data = Object.fromEntries(new FormData(e.target))
         
         const res = await fetch('/api/movements', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        });
+        })
 
         if (res.ok) {
-            location.reload();
+            location.reload()
         } else {
-            alert('Error al registrar movimiento');
+            alert('Error al registrar movimiento')
         }
-    };
+    }
 </script>

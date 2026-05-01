@@ -48,100 +48,91 @@
 </div>
 
 <script>
-    // Función para cargar categorías dinámicamente
     async function fetchCategories() {
-        const select = document.getElementById('selectCategorias');
+        const select = document.getElementById('selectCategorias')
         try {
-            // Asegúrate de tener esta ruta GET /api/categories en tu servidor
-            const response = await fetch('/api/categories');
-            const categories = await response.json();
+            const response = await fetch('/api/categories')
+            const categories = await response.json()
             
             select.innerHTML = '<option value="">Seleccione una categoría</option>' + 
-                categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
         } catch (error) {
-            select.innerHTML = '<option value="">Error al cargar categorías</option>';
+            select.innerHTML = '<option value="">Error al cargar categorías</option>'
         }
     }
 
-    // Cargamos categorías cada vez que se intenta abrir el modal
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.attributeName === "class") {
-                const isHidden = mutation.target.classList.contains('hidden');
-                if (!isHidden) fetchCategories();
+                const isHidden = mutation.target.classList.contains('hidden')
+                if (!isHidden) fetchCategories()
             }
-        });
-    });
+        })
+    })
 
-    observer.observe(document.getElementById('modalProducto'), { attributes: true });
+    observer.observe(document.getElementById('modalProducto'), { attributes: true })
 
-    // Lógica para enviar el formulario al Backend
     document.getElementById('formProducto').onsubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault()
         
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData);
+        const formData = new FormData(e.target)
+        const data = Object.fromEntries(formData)
 
         try {
             const response = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
-            });
+            })
 
             if (response.ok) {
-                location.reload();
+                location.reload()
             } else {
-                const errorData = await response.json();
-                alert('Error al guardar: ' + (errorData.error || 'Verifica los datos'));
+                const errorData = await response.json()
+                alert('Error al guardar: ' + (errorData.error || 'Verifica los datos'))
             }
         } catch (error) {
-            console.error('Error en la petición:', error);
-            alert('No se pudo conectar con el servidor');
+            console.error('Error en la petición:', error)
+            alert('No se pudo conectar con el servidor')
         }
-    };
+    }
 
     function abrirModalEdicion(producto) {
-    const modal = document.getElementById('modalProducto');
-    const form = document.getElementById('formProducto');
+    const modal = document.getElementById('modalProducto')
+    const form = document.getElementById('formProducto')
     
-    // Cambiar título y botón
-    modal.querySelector('h2').innerText = 'Editar Producto';
-    form.querySelector('button[type="submit"]').innerText = 'Actualizar Producto';
+    modal.querySelector('h2').innerText = 'Editar Producto'
+    form.querySelector('button[type="submit"]').innerText = 'Actualizar Producto'
     
-    // Rellenar campos
-    form.name.value = producto.name;
-    form.sku.value = producto.sku;
-    form.price.value = producto.price;
-    form.stock.value = producto.stock;
+    form.name.value = producto.name
+    form.sku.value = producto.sku
+    form.price.value = producto.price
+    form.stock.value = producto.stock
     
-    // Guardar el ID en un atributo del form para saber que estamos editando
-    form.dataset.editId = producto.id;
+    form.dataset.editId = producto.id
     
-    // Seleccionar la categoría actual
     setTimeout(() => {
-        document.getElementById('selectCategorias').value = producto.categoryId || "";
-    }, 500); // Esperamos a que carguen las categorías
+        document.getElementById('selectCategorias').value = producto.categoryId || ""
+    }, 500)
 
-    modal.classList.remove('hidden');
+    modal.classList.remove('hidden')
 }
 
-// Modificar el submit del form
 document.getElementById('formProducto').onsubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
-    const editId = e.target.dataset.editId;
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    const data = Object.fromEntries(formData)
+    const editId = e.target.dataset.editId
 
-    const url = editId ? `/api/products/${editId}` : '/api/products';
-    const method = editId ? 'PUT' : 'POST';
+    const url = editId ? `/api/products/${editId}` : '/api/products'
+    const method = editId ? 'PUT' : 'POST'
 
     const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    });
+    })
 
-    if (response.ok) location.reload();
-};
+    if (response.ok) location.reload()
+}
 </script>

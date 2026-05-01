@@ -78,29 +78,28 @@
     <script>
         
         function exportarHistorial() {
-            const table = document.getElementById("tabla-historial");
-            const productName = document.getElementById("productName").innerText;
-            const table2excel = new Table2Excel();
+            const table = document.getElementById("tabla-historial")
+            const productName = document.getElementById("productName").innerText
+            const table2excel = new Table2Excel()
             
             
-            table2excel.export(table, "Historial_" + productName.replace(/\s+/g, '_') + "_" + new Date().toISOString().split('T')[0]);
+            table2excel.export(table, "Historial_" + productName.replace(/\s+/g, '_') + "_" + new Date().toISOString().split('T')[0])
         }
 
-        // --- LÓGICA DEL GRÁFICO (Chart.js) ---
-        const movsRaw = JSON.parse('<%- JSON.stringify(movimientos) %>');
-        const movsOrdenados = [...movsRaw].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const movsRaw = JSON.parse('<%- JSON.stringify(movimientos) %>')
+        const movsOrdenados = [...movsRaw].sort((a, b) => new Date(a.date) - new Date(b.date))
 
-        let acumulado = 0;
+        let acumulado = 0
         const dataPuntos = movsOrdenados.map(m => {
-            acumulado = (m.type === 'IN') ? (acumulado + Number(m.quantity)) : (acumulado - Number(m.quantity));
-            return acumulado;
-        });
+            acumulado = (m.type === 'IN') ? (acumulado + Number(m.quantity)) : (acumulado - Number(m.quantity))
+            return acumulado
+        })
 
         const labels = movsOrdenados.map(m => {
-            return new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-        });
+            return new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+        })
 
-        const ctx = document.getElementById('stockChart').getContext('2d');
+        const ctx = document.getElementById('stockChart').getContext('2d')
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -125,7 +124,7 @@
                     x: { grid: { display: false } }
                 }
             }
-        });
+        })
     </script>
 </body>
 </html>

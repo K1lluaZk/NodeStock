@@ -16,7 +16,7 @@
                     📁 Categorías
                 </a>
                 <button id="btn-logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold border border-red-200 transition-all">
-                    Logout
+                    Cerrar sesión
                 </button>
             </div>
         </div>
@@ -79,54 +79,52 @@
     <%- include('partials/modal-producto') %>
 
 <script>
-    let productos = [];
-    const UMBRAL_STOCK = 5;
+    let productos = []
+    const UMBRAL_STOCK = 5
 
-    // --- CARGA INICIAL ---
     async function load() {
         try {
-            const res = await fetch('/api/products');
-            productos = await res.json();
-            render(productos);
-            revisarStockGlobal();
-        } catch (error) { console.error(error); }
+            const res = await fetch('/api/products')
+            productos = await res.json()
+            render(productos)
+            revisarStockGlobal()
+        } catch (error) { console.error(error) }
     }
 
     async function loadFilterCategories() {
         try {
-            const res = await fetch('/api/categories');
-            const categories = await res.json();
-            const select = document.getElementById('filtro-categoria');
-            select.innerHTML = '<option value="">Todas las categorías</option>';
+            const res = await fetch('/api/categories')
+            const categories = await res.json()
+            const select = document.getElementById('filtro-categoria')
+            select.innerHTML = '<option value="">Todas las categorías</option>'
             categories.forEach(cat => {
-                select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
-            });
-        } catch (error) { console.error(error); }
+                select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`
+            })
+        } catch (error) { console.error(error) }
     }
 
     function revisarStockGlobal() {
-        const hayStockBajo = productos.some(p => p.stock <= UMBRAL_STOCK);
-        document.getElementById('alerta-stock').classList.toggle('hidden', !hayStockBajo);
+        const hayStockBajo = productos.some(p => p.stock <= UMBRAL_STOCK)
+        document.getElementById('alerta-stock').classList.toggle('hidden', !hayStockBajo)
     }
 
     function render(data) {
-        const body = document.getElementById('tabla-body');
-        const btnLimpiar = document.getElementById('btn-limpiar');
+        const body = document.getElementById('tabla-body')
+        const btnLimpiar = document.getElementById('btn-limpiar')
         
-        // Mostrar botón de "Ver todos" si la lista está filtrada
         if (data.length === productos.length) {
-            btnLimpiar.classList.add('hidden');
+            btnLimpiar.classList.add('hidden')
             } else {
-            btnLimpiar.classList.remove('hidden');
+            btnLimpiar.classList.remove('hidden')
             }   
 
         if (data.length === 0) {
-            body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`;
-            return;
+            body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`
+            return
         }
 
         body.innerHTML = data.map(p => {
-            const esCritico = p.stock <= UMBRAL_STOCK;
+            const esCritico = p.stock <= UMBRAL_STOCK
             return `
                 <tr class="${esCritico ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'} border-b border-gray-100 transition-colors">
                     <td class="p-4">
@@ -146,86 +144,92 @@
                     </td>
                 </tr>
             `;
-        }).join('');
+        }).join('')
     }
 
-    // --- LÓGICA DE FILTROS ---
     function aplicarFiltros() {
-        const term = document.getElementById('busqueda').value.toLowerCase();
-        const catFilter = document.getElementById('filtro-categoria').value;
+        const term = document.getElementById('busqueda').value.toLowerCase()
+        const catFilter = document.getElementById('filtro-categoria').value
 
         const filtrados = productos.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term);
-            const matchesCategory = catFilter === "" || p.categoryName === catFilter;
-            return matchesSearch && matchesCategory;
-        });
-        render(filtrados);
+            const matchesSearch = p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)
+            const matchesCategory = catFilter === "" || p.categoryName === catFilter
+            return matchesSearch && matchesCategory
+        })
+        render(filtrados)
     }
 
     function filtrarStockCritico() {
-        const criticos = productos.filter(p => p.stock <= UMBRAL_STOCK);
-        render(criticos);
+        const criticos = productos.filter(p => p.stock <= UMBRAL_STOCK)
+        render(criticos)
     }
 
     function limpiarFiltros() {
-        document.getElementById('busqueda').value = "";
-        document.getElementById('filtro-categoria').value = "";
-        render(productos);
+        document.getElementById('busqueda').value = ""
+        document.getElementById('filtro-categoria').value = ""
+        render(productos)
     }
 
-    document.getElementById('busqueda').oninput = aplicarFiltros;
-    document.getElementById('filtro-categoria').onchange = aplicarFiltros;
+    document.getElementById('busqueda').oninput = aplicarFiltros
+    document.getElementById('filtro-categoria').onchange = aplicarFiltros
 
-    // --- EXPORTAR EXCEL ---
+    // Excel
     function exportarStock() {
-        const table = document.getElementById("tabla-inventario");
-        const acciones = table.querySelectorAll('th:last-child, td:last-child');
-        acciones.forEach(el => el.style.display = 'none');
-        new Table2Excel().export(table, "Inventario_" + new Date().toISOString().split('T')[0]);
-        acciones.forEach(el => el.style.display = '');
+        const table = document.getElementById("tabla-inventario")
+        const acciones = table.querySelectorAll('th:last-child, td:last-child')
+        acciones.forEach(el => el.style.display = 'none')
+        new Table2Excel().export(table, "Inventario_" + new Date().toISOString().split('T')[0])
+        acciones.forEach(el => el.style.display = '')
     }
 
-    // --- LOGOUT ---
+    // Logout 
     document.getElementById('btn-logout').addEventListener('click', async () => {
-        const res = await fetch('/logout', { method: 'GET' });
-        if (res.ok) window.location.href = '/';
+        const seguro = confirm('¿Estás seguro de que quieres cerrar sesión?');
+        if (!seguro) return;
+        try {
+         const res = await fetch('/logout', { method: 'GET' });
+            if (res.ok) {
+                window.location.href = '/';
+        }
+        } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+        }
     });
-
-    // --- MODALES (NUEVO/EDITAR) ---
+    
     function abrirModalNuevo() {
-        const form = document.getElementById('formProducto');
-        form.reset();
-        delete form.dataset.editId;
+        const form = document.getElementById('formProducto')
+        form.reset()
+        delete form.dataset.editId
         [form.name, form.sku, form.stock].forEach(el => {
-            el.readOnly = false;
-            el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-        });
-        document.getElementById('modalProducto').classList.remove('hidden');
+            el.readOnly = false
+            el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500')
+        })
+        document.getElementById('modalProducto').classList.remove('hidden')
     }
 
     function abrirModalEdicion(p) {
-        const form = document.getElementById('formProducto');
-        form.name.value = p.name;
-        form.sku.value = p.sku;
-        form.price.value = p.price;
-        form.stock.value = p.stock;
+        const form = document.getElementById('formProducto')
+        form.name.value = p.name
+        form.sku.value = p.sku
+        form.price.value = p.price
+        form.stock.value = p.stock
         [form.name, form.sku, form.stock].forEach(el => {
-            el.readOnly = true;
-            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-        });
-        form.dataset.editId = p.id;
-        document.getElementById('modalProducto').classList.remove('hidden');
+            el.readOnly = true
+            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500')
+        })
+        form.dataset.editId = p.id
+        document.getElementById('modalProducto').classList.remove('hidden')
     }
 
     async function eliminarProducto(id) {
         if (confirm('¿Eliminar este producto?')) {
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-            if (res.ok) load();
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+            if (res.ok) load()
         }
     }
 
-    load();
-    loadFilterCategories();
+    load()
+    loadFilterCategories()
 </script>
 </body>
 </html>

@@ -53,15 +53,15 @@
 
 <script>
 
-let editId = null;
+let editId = null
 
 // Cargar categorías
 async function loadCats() {
 
-    const res = await fetch('/api/categories');
-    const data = await res.json();
+    const res = await fetch('/api/categories')
+    const data = await res.json()
 
-    const body = document.getElementById('lista-categorias');
+    const body = document.getElementById('lista-categorias')
 
     body.innerHTML = data.map(cat => `
         <tr class="hover:bg-gray-50 transition-colors">
@@ -91,25 +91,25 @@ async function loadCats() {
             </td>
 
         </tr>
-    `).join('');
+    `).join('')
 }
 
 
 // Crear o actualizar categoría
 document.getElementById('formCat').onsubmit = async (e) => {
 
-    e.preventDefault();
+    e.preventDefault()
 
-    const name = document.getElementById('catName').value;
-    const description = document.getElementById('catDesc').value;
+    const name = document.getElementById('catName').value
+    const description = document.getElementById('catDesc').value
 
-    let url = '/api/create';
-    let method = 'POST';
+    let url = '/api/create'
+    let method = 'POST'
 
     if (editId) {
 
-        url = `/api/update/${editId}`;
-        method = 'PUT';
+        url = `/api/update/${editId}`
+        method = 'PUT'
 
     }
 
@@ -119,31 +119,31 @@ document.getElementById('formCat').onsubmit = async (e) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description })
 
-    });
+    })
 
     if (res.ok) {
 
-        e.target.reset();
-        editId = null;
+        e.target.reset()
+        editId = null
 
-        document.querySelector('#formCat button').textContent = "Guardar";
+        document.querySelector('#formCat button').textContent = "Guardar"
 
-        loadCats();
+        loadCats()
 
     }
 
-};
+}
 
 
 // Editar categoría
 function editarCat(id, name, description) {
 
-    document.getElementById('catName').value = name;
-    document.getElementById('catDesc').value = description;
+    document.getElementById('catName').value = name
+    document.getElementById('catDesc').value = description
 
-    editId = id;
+    editId = id
 
-    document.querySelector('#formCat button').textContent = "Actualizar";
+    document.querySelector('#formCat button').textContent = "Actualizar"
 
 }
 
@@ -155,15 +155,15 @@ async function eliminarCat(id) {
 
         const res = await fetch(`/api/delete/${id}`, {
             method: 'DELETE'
-        });
+        })
 
         if (res.ok) {
 
-            loadCats();
+            loadCats()
 
         } else {
 
-            alert('Error al eliminar la categoría');
+            alert('Error al eliminar la categoría')
 
         }
 
@@ -171,7 +171,7 @@ async function eliminarCat(id) {
 
 }
 
-loadCats();
+loadCats()
 </script>
 </body>
 </html>

@@ -12,21 +12,20 @@ import { db } from './firebase.js'
 
 const app = express()
 
-// --- CONFIGURACIÓN ---
+// CONFIGURACIÓN
 app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 
 app.set('view engine', 'ejs')
 
-// --- MIDDLEWARE DE SESIÓN ---
+// MIDDLEWARE DE SESIÓN
 app.use(async (req, res, next) => {
   const token = req.cookies.access_token
   const refreshToken = req.cookies.refresh_token
 
   req.session = { user: null }
 
-  // 1. Intentar validar el Access Token
   if (token) {
     try {
       const data = jwt.verify(token, SECRET_JWT_KEY)
@@ -37,7 +36,7 @@ app.use(async (req, res, next) => {
     }
   }
 
-  // 2. Si falló el Access, intentar con el Refresh Token
+  // Si falló el Access, intentar con el Refresh Token
   if (refreshToken) {
     try {
       const data = jwt.verify(refreshToken, REFRESH_SECRET_KEY)
@@ -68,8 +67,7 @@ app.use(async (req, res, next) => {
   next()
 })
 
-// --- RUTAS DE VISTAS (EJS) ---
-
+// Rutas De Vistas
 app.get('/', (req, res) => {
   const { user } = req.session
   if (user) return res.redirect('/dashboard')
@@ -107,7 +105,7 @@ app.get('/producto/:id', async (req, res) => {
   }
 })
 
-// --- RUTAS DE API (JSON) ---
+// --- Rutas De API
 
 app.use('/api/products', productRoutes)
 app.use('/api/movements', movementRoutes)
@@ -150,7 +148,7 @@ app.delete('/api/delete/:id', async (req, res) => {
   }
 })
 
-// --- AUTENTICACIÓN ---
+// AUTENTICACIÓN
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body
@@ -165,16 +163,15 @@ app.post('/login', async (req, res) => {
     // 2. Refresh Token (7 días)
     const refreshToken = jwt.sign(tokenPayload, REFRESH_SECRET_KEY, { expiresIn: '7d' })
 
-    // --- GUARDAR ACCESS TOKEN EN COOKIE ---
+    // GUARDAR ACCESS TOKEN EN COOKIE
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      // maxAge: 15 * 1000 // 15 segundos para pruebas en produccion
       maxAge: 15 * 60 * 1000 // 15 minutos
     })
 
-    // --- GUARDAR REFRESH TOKEN EN COOKIE ---
+    // GUARDAR REFRESH TOKEN EN COOKIE
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -182,7 +179,7 @@ app.post('/login', async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
     })
 
-    res.send({ user, accessToken }) // Mantener esto por si el frontend lo necesita
+    res.send({ user, accessToken })
   } catch (error) {
     res.status(401).send(error.message)
   }
@@ -200,7 +197,6 @@ app.post('/auth/refresh', (req, res) => {
       { expiresIn: '15m' }
     )
 
-    // ACTUALIZAR LA COOKIE PARA LAS VISTAS
     res.cookie('access_token', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

@@ -108,7 +108,6 @@
   </div>
 
   <script>
-    // --- MANTENEMOS TU LÓGICA ORIGINAL ---
     const $ = el => document.querySelector(el)
 
     const $tabLogin = $('#tab-login')
@@ -117,13 +116,13 @@
     const $registerSection = $('#register-section')
 
     $tabLogin?.addEventListener('click', () => {
-      $tabLogin.classList.add('active'); $tabRegister.classList.remove('active');
-      $loginSection.classList.remove('hidden'); $registerSection.classList.add('hidden');
+      $tabLogin.classList.add('active'); $tabRegister.classList.remove('active')
+      $loginSection.classList.remove('hidden'); $registerSection.classList.add('hidden')
     })
 
     $tabRegister?.addEventListener('click', () => {
-      $tabRegister.classList.add('active'); $tabLogin.classList.remove('active');
-      $registerSection.classList.remove('hidden'); $loginSection.classList.add('hidden');
+      $tabRegister.classList.add('active'); $tabLogin.classList.remove('active')
+      $registerSection.classList.remove('hidden'); $loginSection.classList.add('hidden')
     })
 
     const $loginForm = $('#login-form')
@@ -144,11 +143,11 @@
       .then(res => {
         if (res.ok) {
           $loginSpan.innerText = 'Sesión iniciada. Entrando...'
-          $loginSpan.className = 'block mt-4 text-center text-green-600 font-bold';
-          setTimeout(() => { window.location.href = '/dashboard' }, 1500);
+          $loginSpan.className = 'block mt-4 text-center text-green-600 font-bold'
+          setTimeout(() => { window.location.href = '/dashboard' }, 1500)
         } else {
           $loginSpan.innerText = 'Error al iniciar sesión'
-          $loginSpan.className = 'block mt-4 text-center text-red-500 font-bold';
+          $loginSpan.className = 'block mt-4 text-center text-red-500 font-bold'
         }
       })
     })
@@ -168,11 +167,11 @@
       .then(res => {
         if (res.ok) {
           $registerSpan.innerText = 'Usuario registrado. Redirigiendo...'
-          $registerSpan.className = 'block mt-4 text-center text-green-600 font-bold';
-          setTimeout(() => { window.location.href = '/' }, 1500);
+          $registerSpan.className = 'block mt-4 text-center text-green-600 font-bold'
+          setTimeout(() => { window.location.href = '/' }, 1500)
         } else {
           $registerSpan.innerText = 'Error al registrar usuario'
-          $registerSpan.className = 'block mt-4 text-center text-red-500 font-bold';
+          $registerSpan.className = 'block mt-4 text-center text-red-500 font-bold'
         }
       })
     })
