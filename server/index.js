@@ -197,6 +197,7 @@ app.post('/auth/refresh', (req, res) => {
       { expiresIn: '15m' }
     )
 
+    // ACTUALIZAR LA COOKIE PARA LAS VISTAS
     res.cookie('access_token', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

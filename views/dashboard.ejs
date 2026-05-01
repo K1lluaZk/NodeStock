@@ -197,28 +197,47 @@
     });
     
     function abrirModalNuevo() {
-        const form = document.getElementById('formProducto')
-        form.reset()
-        delete form.dataset.editId
-        [form.name, form.sku, form.stock].forEach(el => {
-            el.readOnly = false
-            el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500')
-        })
-        document.getElementById('modalProducto').classList.remove('hidden')
+    const form = document.getElementById('formProducto');
+    form.reset();
+    delete form.dataset.editId;
+
+    // Seleccionamos los campos explícitamente para evitar el error de undefined
+    const campos = [form.querySelector('[name="name"]'), form.querySelector('[name="sku"]'), form.querySelector('[name="stock"]')];
+
+    campos.forEach(el => {
+        if (el) { // Verificamos que el elemento exista
+            el.readOnly = false;
+            el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+        }
+    });
+
+    document.getElementById('modalProducto').classList.remove('hidden');
     }
 
     function abrirModalEdicion(p) {
-        const form = document.getElementById('formProducto')
-        form.name.value = p.name
-        form.sku.value = p.sku
-        form.price.value = p.price
-        form.stock.value = p.stock
-        [form.name, form.sku, form.stock].forEach(el => {
-            el.readOnly = true
-            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500')
-        })
-        form.dataset.editId = p.id
-        document.getElementById('modalProducto').classList.remove('hidden')
+    const form = document.getElementById('formProducto');
+    
+    // Asignamos valores buscando por el atributo name
+    form.querySelector('[name="name"]').value = p.name;
+    form.querySelector('[name="sku"]').value = p.sku;
+    form.querySelector('[name="price"]').value = p.price || 0;
+    form.querySelector('[name="stock"]').value = p.stock;
+
+    const camposBloqueados = [
+        form.querySelector('[name="name"]'), 
+        form.querySelector('[name="sku"]'), 
+        form.querySelector('[name="stock"]')
+    ];
+
+    camposBloqueados.forEach(el => {
+        if (el) {
+            el.readOnly = true;
+            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+        }
+    });
+
+    form.dataset.editId = p.id;
+    document.getElementById('modalProducto').classList.remove('hidden');
     }
 
     async function eliminarProducto(id) {
