@@ -12,9 +12,17 @@
             <h1 class="text-3xl font-bold text-gray-800">📦 Inventario NodeStock</h1>
             
             <div class="flex items-center gap-3 w-full md:w-auto">
-                <a href="/categories" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all shadow-sm">
-                    📁 Categorías
-                </a>
+                <% if (user.role === 'admin' || user.role === 'manager') { %>
+                    <a href="/categories" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all shadow-sm">
+                        📁 Categorías
+                    </a>
+                <% } %>
+                <% if (user.role === 'admin') { %>    
+                    <a href="/users" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-sm">
+                        👥 Usuarios
+                    </a>
+                <% } %>
+
                 <button id="btn-logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold border border-red-200 transition-all">
                     Cerrar sesión
                 </button>
@@ -55,9 +63,11 @@
                 <button onclick="exportarStock()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md flex items-center gap-2">
                     📊 Exportar Excel
                 </button>
-                <button onclick="abrirModalNuevo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md flex items-center gap-2">
-                    <span>+</span> Nuevo Producto
-                </button>
+                <% if (user.role === 'admin' || user.role === 'manager') { %>
+                    <button onclick="abrirModalNuevo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md flex items-center gap-2">
+                        <span>+</span> Nuevo Producto
+                    </button>
+                <% } %>
             </div>
         </div>
 
@@ -68,6 +78,7 @@
                         <th class="p-4 font-semibold">Producto</th>
                         <th class="p-4 font-semibold text-center">SKU</th>
                         <th class="p-4 text-center font-semibold">Stock</th>
+                        <th class="p-4 text-right font-semibold">Precio Unitario</th>
                         <th class="p-4 text-right font-semibold export-ignore">Acciones</th>
                     </tr>
                 </thead>
@@ -79,107 +90,137 @@
     <%- include('partials/modal-producto') %>
 
 <script>
-    let productos = []
-    const UMBRAL_STOCK = 5
+window.userRole = "<%= user.role %>";
+</script>
+
+<script>
+    let productos = [];
+    const UMBRAL_STOCK = 5;
 
     async function load() {
         try {
-            const res = await fetch('/api/products')
-            productos = await res.json()
-            render(productos)
-            revisarStockGlobal()
-        } catch (error) { console.error(error) }
+            const res = await fetch('/api/products');
+            productos = await res.json();
+            render(productos);
+            revisarStockGlobal();
+        } catch (error) { 
+            console.error(error); 
+        }
     }
 
     async function loadFilterCategories() {
         try {
-            const res = await fetch('/api/categories')
-            const categories = await res.json()
-            const select = document.getElementById('filtro-categoria')
-            select.innerHTML = '<option value="">Todas las categorías</option>'
+            const res = await fetch('/api/categories');
+            const categories = await res.json();
+            const select = document.getElementById('filtro-categoria');
+            select.innerHTML = '<option value="">Todas las categorías</option>';
             categories.forEach(cat => {
-                select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`
-            })
-        } catch (error) { console.error(error) }
+                select.innerHTML += `<option value="${cat.name}">${cat.name}</option>`;
+            });
+        } catch (error) { 
+            console.error(error); 
+        }
     }
 
     function revisarStockGlobal() {
-        const hayStockBajo = productos.some(p => p.stock <= UMBRAL_STOCK)
-        document.getElementById('alerta-stock').classList.toggle('hidden', !hayStockBajo)
+        const hayStockBajo = productos.some(p => p.stock <= UMBRAL_STOCK);
+        document.getElementById('alerta-stock').classList.toggle('hidden', !hayStockBajo);
     }
 
     function render(data) {
-        const body = document.getElementById('tabla-body')
-        const btnLimpiar = document.getElementById('btn-limpiar')
+        const body = document.getElementById('tabla-body');
+        const btnLimpiar = document.getElementById('btn-limpiar');
         
         if (data.length === productos.length) {
-            btnLimpiar.classList.add('hidden')
-            } else {
-            btnLimpiar.classList.remove('hidden')
-            }   
+            btnLimpiar.classList.add('hidden');
+        } else {
+            btnLimpiar.classList.remove('hidden');
+        }   
 
         if (data.length === 0) {
-            body.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`
-            return
+            body.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500 italic">No se encontraron productos.</td></tr>`;
+            return;
         }
 
         body.innerHTML = data.map(p => {
-            const esCritico = p.stock <= UMBRAL_STOCK
+            const esCritico = p.stock <= UMBRAL_STOCK;
+
             return `
                 <tr class="${esCritico ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'} border-b border-gray-100 transition-colors">
                     <td class="p-4">
                         <div class="font-bold text-gray-800">${p.name}</div>
-                        <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">${p.categoryName}</span>
+                        <span class="text-[10px] uppercase px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold">
+                            ${p.categoryName}
+                        </span>
                     </td>
-                    <td class="p-4 text-center font-mono text-sm">${p.sku}</td>
+
+                    <td class="p-4 text-center font-mono text-sm">
+                        ${p.sku}
+                    </td>
+
                     <td class="p-4 text-center">
                         <span class="${esCritico ? 'text-red-600 font-bold animate-pulse' : 'text-gray-700'} flex items-center justify-center gap-1">
                             ${esCritico ? '⚠️' : ''} ${p.stock}
                         </span>
                     </td>
+
+                    <td class="p-4 text-right font-semibold text-green-600">
+                        RD$ ${Number(p.price || 0).toFixed(2)}
+                    </td>
+
                     <td class="p-4 text-right flex justify-end gap-2 export-ignore">
-                        <button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">✏️ Editar</button>
-                        <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">📊 Historial</a>
-                        <button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">🗑️ Borrar</button>
+                        ${window.userRole === 'admin' || window.userRole === 'manager'
+                            ? `<button onclick='abrirModalEdicion(${JSON.stringify(p)})' class="text-blue-600 hover:text-blue-800 font-medium text-sm">✏️ Editar</button>`
+                            : ''
+                        }
+
+                        <a href="/producto/${p.id}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
+                            📊 Historial
+                        </a>
+
+                        ${window.userRole === 'admin' || window.userRole === 'manager'
+                            ? `<button onclick="eliminarProducto('${p.id}')" class="text-red-500 hover:text-red-700 font-medium text-sm">🗑️ Borrar</button>`
+                            : ''
+                        }
                     </td>
                 </tr>
             `;
-        }).join('')
-    }
+        }).join('');
+    } // <-- Aquí se cerró correctamente la función render()
 
     function aplicarFiltros() {
-        const term = document.getElementById('busqueda').value.toLowerCase()
-        const catFilter = document.getElementById('filtro-categoria').value
+        const term = document.getElementById('busqueda').value.toLowerCase();
+        const catFilter = document.getElementById('filtro-categoria').value;
 
         const filtrados = productos.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)
-            const matchesCategory = catFilter === "" || p.categoryName === catFilter
-            return matchesSearch && matchesCategory
-        })
-        render(filtrados)
+            const matchesSearch = p.name.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term);
+            const matchesCategory = catFilter === "" || p.categoryName === catFilter;
+            return matchesSearch && matchesCategory;
+        });
+        render(filtrados);
     }
 
     function filtrarStockCritico() {
-        const criticos = productos.filter(p => p.stock <= UMBRAL_STOCK)
-        render(criticos)
+        const criticos = productos.filter(p => p.stock <= UMBRAL_STOCK);
+        render(criticos);
     }
 
     function limpiarFiltros() {
-        document.getElementById('busqueda').value = ""
-        document.getElementById('filtro-categoria').value = ""
-        render(productos)
+        document.getElementById('busqueda').value = "";
+        document.getElementById('filtro-categoria').value = "";
+        render(productos);
     }
 
-    document.getElementById('busqueda').oninput = aplicarFiltros
-    document.getElementById('filtro-categoria').onchange = aplicarFiltros
+    document.getElementById('busqueda').oninput = aplicarFiltros;
+    document.getElementById('filtro-categoria').onchange = aplicarFiltros;
 
     // Excel
     function exportarStock() {
-        const table = document.getElementById("tabla-inventario")
-        const acciones = table.querySelectorAll('th:last-child, td:last-child')
-        acciones.forEach(el => el.style.display = 'none')
-        new Table2Excel().export(table, "Inventario_" + new Date().toISOString().split('T')[0])
-        acciones.forEach(el => el.style.display = '')
+        const table = document.getElementById("tabla-inventario");
+        const acciones = table.querySelectorAll('th:last-child, td:last-child');
+        acciones.forEach(el => el.style.display = 'none');
+        new Table2Excel().export(table, "Inventario_" + new Date().toISOString().split('T')[0]);
+        acciones.forEach(el => el.style.display = '');
     }
 
     // Logout 
@@ -187,68 +228,66 @@
         const seguro = confirm('¿Estás seguro de que quieres cerrar sesión?');
         if (!seguro) return;
         try {
-         const res = await fetch('/logout', { method: 'GET' });
+            const res = await fetch('/logout', { method: 'GET' });
             if (res.ok) {
                 window.location.href = '/';
-        }
+            }
         } catch (error) {
-        console.error("Error al cerrar sesión:", error);
+            console.error("Error al cerrar sesión:", error);
         }
     });
     
     function abrirModalNuevo() {
-    const form = document.getElementById('formProducto');
-    form.reset();
-    delete form.dataset.editId;
+        const form = document.getElementById('formProducto');
+        form.reset();
+        delete form.dataset.editId;
 
-    // Seleccionamos los campos explícitamente para evitar el error de undefined
-    const campos = [form.querySelector('[name="name"]'), form.querySelector('[name="sku"]'), form.querySelector('[name="stock"]')];
+        const campos = [form.querySelector('[name="name"]'), form.querySelector('[name="sku"]'), form.querySelector('[name="stock"]')];
 
-    campos.forEach(el => {
-        if (el) { // Verificamos que el elemento exista
-            el.readOnly = false;
-            el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-        }
-    });
+        campos.forEach(el => {
+            if (el) { 
+                el.readOnly = false;
+                el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+            }
+        });
 
-    document.getElementById('modalProducto').classList.remove('hidden');
+        document.getElementById('modalProducto').classList.remove('hidden');
     }
 
     function abrirModalEdicion(p) {
-    const form = document.getElementById('formProducto');
-    
-    // Asignamos valores buscando por el atributo name
-    form.querySelector('[name="name"]').value = p.name;
-    form.querySelector('[name="sku"]').value = p.sku;
-    form.querySelector('[name="price"]').value = p.price || 0;
-    form.querySelector('[name="stock"]').value = p.stock;
+        const form = document.getElementById('formProducto');
+        
+        form.querySelector('[name="name"]').value = p.name;
+        form.querySelector('[name="sku"]').value = p.sku;
+        form.querySelector('[name="price"]').value = p.price || 0;
+        form.querySelector('[name="stock"]').value = p.stock;
 
-    const camposBloqueados = [
-        form.querySelector('[name="name"]'), 
-        form.querySelector('[name="sku"]'), 
-        form.querySelector('[name="stock"]')
-    ];
+        const camposBloqueados = [
+            form.querySelector('[name="name"]'), 
+            form.querySelector('[name="sku"]'), 
+            form.querySelector('[name="stock"]')
+        ];
 
-    camposBloqueados.forEach(el => {
-        if (el) {
-            el.readOnly = true;
-            el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-        }
-    });
+        camposBloqueados.forEach(el => {
+            if (el) {
+                el.readOnly = true;
+                el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+            }
+        });
 
-    form.dataset.editId = p.id;
-    document.getElementById('modalProducto').classList.remove('hidden');
+        form.dataset.editId = p.id;
+        document.getElementById('modalProducto').classList.remove('hidden');
     }
 
     async function eliminarProducto(id) {
         if (confirm('¿Eliminar este producto?')) {
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-            if (res.ok) load()
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            if (res.ok) load();
         }
     }
 
-    load()
-    loadFilterCategories()
+    load();
+    loadFilterCategories();
 </script>
 </body>
 </html>

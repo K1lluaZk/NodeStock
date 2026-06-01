@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-8">
+
+<div class="max-w-6xl mx-auto">
+
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">
+        👥 Gestión de Usuarios
+    </h1>
+
+    <a href="/dashboard"
+       class="bg-gray-700 text-white px-4 py-2 rounded-lg">
+        Volver
+    </a>
+</div>
+
+<div class="grid md:grid-cols-3 gap-6">
+
+    <!-- Crear Usuario -->
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+
+        <h2 class="text-xl font-bold mb-4">
+            Crear Usuario
+        </h2>
+
+        <form id="userForm" class="space-y-4">
+
+            <input
+                type="email"
+                name="username"
+                placeholder="correo@empresa.com"
+                required
+                class="w-full border rounded-lg p-2"
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Contraseña"
+                required
+                class="w-full border rounded-lg p-2"
+            >
+
+            <select
+                name="role"
+                class="w-full border rounded-lg p-2"
+            >
+                <option value="viewer">Viewer</option>
+                <option value="manager">Manager</option>
+            </select>
+
+            <button
+                type="submit"
+                class="w-full bg-indigo-600 text-white py-2 rounded-lg"
+            >
+                Crear Usuario
+            </button>
+
+        </form>
+
+    </div>
+
+    <!-- Lista Usuarios -->
+
+    <div class="md:col-span-2 bg-white rounded-xl shadow-lg p-6">
+
+        <h2 class="text-xl font-bold mb-4">
+            Usuarios Registrados
+        </h2>
+
+        <table class="w-full">
+
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-3">Correo</th>
+                    <th class="text-left p-3">Rol</th>
+                    <th class="text-left p-3">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody id="usersTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<script>
+
+async function loadUsers() {
+
+    const res = await fetch('/api/users')
+
+    const users = await res.json()
+
+    const tbody = document.getElementById('usersTable')
+
+    tbody.innerHTML = users.map(user => `
+        <tr class="border-b">
+
+            <td class="p-3">
+                ${user.username}
+            </td>
+
+            <td class="p-3">
+                ${user.role}
+            </td>
+
+            <td class="p-3">
+
+                <button
+                    onclick="deleteUser('${user.id}')"
+                    class="text-red-600"
+                >
+                    Eliminar
+                </button>
+
+            </td>
+
+        </tr>
+    `).join('')
+}
+
+async function deleteUser(id) {
+
+    const ok = confirm('¿Eliminar usuario?')
+
+    if (!ok) return
+
+    await fetch(`/api/users/${id}`, {
+        method: 'DELETE'
+    })
+
+    loadUsers()
+}
+
+document
+.getElementById('userForm')
+.addEventListener('submit', async (e) => {
+
+    e.preventDefault()
+
+    const formData = new FormData(e.target)
+
+    const data = Object.fromEntries(formData)
+
+    const res = await fetch('/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+
+    if (res.ok) {
+
+        alert('Usuario creado')
+
+        e.target.reset()
+
+        loadUsers()
+
+    } else {
+
+        const msg = await res.text()
+
+        alert(msg)
+    }
+})
+
+loadUsers()
+
+</script>
+
+</body>
+</html>

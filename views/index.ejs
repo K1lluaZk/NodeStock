@@ -41,9 +41,6 @@
           <div id="tab-login" class="tab active flex-1 py-4 text-center cursor-pointer font-bold text-gray-400 transition-all hover:text-indigo-500">
             Inicio de Sesión
           </div>
-          <div id="tab-register" class="tab flex-1 py-4 text-center cursor-pointer font-bold text-gray-400 transition-all hover:text-indigo-500">
-            Registro de Usuario
-          </div>
         </div>
 
         <div class="p-8">
@@ -69,38 +66,6 @@
                 <span class="block mt-4 text-center min-h-[1.5em] text-sm font-medium"></span>
               </form>
             </div>
-
-            <div id="register-section" class="hidden">
-              <form id="register-form">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Crear cuenta</h2>
-                
-                <div class="mb-4">
-                    <label for="register-username" class="block mb-1 text-sm font-semibold text-gray-600">Nuevo Usuario</label>
-                    <input id="register-username" placeholder="Nombre de usuario o Correo electrónico" name="username" required 
-                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
-                </div>
-                
-                <div class="mb-4">
-                    <label for="register-password" class="block mb-1 text-sm font-semibold text-gray-600">Contraseña</label>
-                    <input type="password" id="register-password" placeholder="Contraseña" name="password" required 
-                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
-
-                        <p id="password-help" class="mt-1 text-xs text-gray-500">
-                          Debe tener al menos 8 caracteres, incluir una mayúscula y un número.
-                        </p>
-                </div>
-                
-                <div class="mb-6">
-                    <label for="register-confirm-password" class="block mb-1 text-sm font-semibold text-gray-600">Confirmar contraseña</label>
-                    <input type="password" id="register-confirm-password" placeholder="Confirmar contraseña" name="confirmPassword" required 
-                        class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm">
-                </div>
-                
-                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-md transition-all">
-                  Registrarme ahora
-                </button>
-                <span class="block mt-4 text-center min-h-[1.5em] text-sm font-medium"></span>
-              </form>
             </div>
         </div>
       </div>
@@ -127,8 +92,6 @@
 
     const $loginForm = $('#login-form')
     const $loginSpan = $('#login-form span')
-    const $registerForm = $('#register-form')
-    const $registerSpan = $('#register-form span')
     const $logoutButton = $('#close-session')
 
     $loginForm?.addEventListener('submit', e => {
@@ -151,31 +114,7 @@
         }
       })
     })
-
-    $registerForm?.addEventListener('submit', e => {
-      e.preventDefault()
-      const username = $('#register-username').value
-      const password = $('#register-password').value
-      const confirmPassword = $('#register-confirm-password').value
-      if (password !== confirmPassword){ alert('Las contraseñas no coinciden'); return }
-
-      fetch('/register', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      })
-      .then(res => {
-        if (res.ok) {
-          $registerSpan.innerText = 'Usuario registrado. Redirigiendo...'
-          $registerSpan.className = 'block mt-4 text-center text-green-600 font-bold'
-          setTimeout(() => { window.location.href = '/' }, 1500)
-        } else {
-          $registerSpan.innerText = 'Error al registrar usuario'
-          $registerSpan.className = 'block mt-4 text-center text-red-500 font-bold'
-        }
-      })
-    })
-
+    
     $logoutButton?.addEventListener('click', e => {
       e.preventDefault()
       fetch('/logout', { method: 'GET', headers: { 'Content-Type': 'application/json' } })

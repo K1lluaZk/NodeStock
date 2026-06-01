@@ -6,8 +6,7 @@ import { SALT_ROUNDS } from './config.js'
 const usersCollection = db.collection('users')
 
 export class UserRepository {
-  // Ahora aceptamos 'role' en los argumentos
-  static async create ({ username, password, role = 'user' }) {
+  static async create ({ username, password, role = 'viewer' }) {
     Validation.username(username)
     Validation.password(password)
 
@@ -17,17 +16,20 @@ export class UserRepository {
       .get()
 
     if (!snapshot.empty) {
-      throw new Error('Username (email) already exists')
+      throw new Error('Username already exists')
     }
 
     const id = crypto.randomUUID()
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
-    // Guardamos el rol en la base de datos
+    const hashedPassword = await bcrypt.hash(
+      password,
+      SALT_ROUNDS
+    )
+
     await usersCollection.doc(id).set({
       username,
       password: hashedPassword,
-      role, // 'admin' o 'user'
+      role,
       createdAt: new Date()
     })
 
@@ -36,7 +38,10 @@ export class UserRepository {
 
   static async login ({ username, password }) {
     Validation.username(username)
-    Validation.password(password)
+
+    if (typeof password !== 'string') {
+      throw new Error('Password must be a string')
+    }
 
     const snapshot = await usersCollection
       .where('username', '==', username)
@@ -50,10 +55,15 @@ export class UserRepository {
     const userDoc = snapshot.docs[0]
     const user = userDoc.data()
 
-    const isValid = await bcrypt.compare(password, user.password)
-    if (!isValid) throw new Error('password is invalid')
+    const isValid = await bcrypt.compare(
+      password,
+      user.password
+    )
 
-    // Extraemos la contraseña y devolvemos el resto (incluyendo el ID y el ROL)
+    if (!isValid) {
+      throw new Error('Password is invalid')
+    }
+
     const { password: _, ...publicUser } = user
 
     return {
@@ -61,21 +71,89 @@ export class UserRepository {
       ...publicUser
     }
   }
+
+  static async getAll () {
+    const snapshot = await usersCollection.get()
+
+    return snapshot.docs.map(doc => {
+      const user = doc.data()
+
+      return {
+        id: doc.id,
+        username: user.username,
+        role: user.role,
+        createdAt: user.createdAt
+      }
+    })
+  }
+
+  static async updateRole ({ id, role }) {
+    const allowedRoles = [
+      'admin',
+      'manager',
+      'viewer'
+    ]
+
+    if (!allowedRoles.includes(role)) {
+      throw new Error('Rol inválido')
+    }
+
+    await usersCollection.doc(id).update({
+      role
+    })
+
+    return true
+  }
+
+  static async delete ({ id }) {
+    const userDoc = await usersCollection.doc(id).get()
+
+    if (!userDoc.exists) {
+      throw new Error('Usuario no encontrado')
+    }
+
+    await usersCollection.doc(id).delete()
+
+    return true
+  }
 }
 
 class Validation {
   static username (username) {
-    if (typeof username !== 'string') throw new Error('Username must be a string')
+    if (typeof username !== 'string') {
+      throw new Error('Username must be a string')
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
     if (!emailRegex.test(username)) {
-      throw new Error('Username must be a valid email (e.g., user@domain.com)')
+      throw new Error(
+        'Username must be a valid email'
+      )
     }
   }
 
   static password (password) {
-    if (typeof password !== 'string') throw new Error('Password must be a string')
-    if (password.length < 8) throw new Error('Password must be at least 8 characters long')
-    if (!/\d/.test(password)) throw new Error('Password must include at least one number')
-    if (!/[A-Z]/.test(password)) throw new Error('Password must include at least one uppercase letter')
+    if (typeof password !== 'string') {
+      throw new Error('Password must be a string')
+    }
+
+    if (password.length < 8) {
+      throw new Error(
+        'Password must be at least 8 characters long'
+      )
+    }
+
+    if (!/\d/.test(password)) {
+      throw new Error(
+        'Password must include at least one number'
+      )
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      throw new Error(
+        'Password must include at least one uppercase letter'
+      )
+    }
   }
 }
