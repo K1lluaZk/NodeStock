@@ -13,18 +13,18 @@ import { authorizeRole } from './middleware/authorizeRole.js'
 
 const app = express()
 
-// --- CONFIGURACIÓN
+// --- Configuración
 
 app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 app.set('view engine', 'ejs')
 
-// --- SESIÓN
+// --- Session Middleware
 
 app.use(sessionMiddleware)
 
-// --- VISTAS
+// --- Vistas
 
 app.get('/', (req, res) => {
   const { user } = req.session
@@ -50,9 +50,7 @@ app.get('/categories', (req, res) => {
   res.render('categories', { user })
 })
 
-app.get(
-  '/users',
-  authorizeRole(['admin']),
+app.get('/users', authorizeRole(['admin']),
   (req, res) => {
     res.render('users', {
       user: req.session.user
@@ -102,12 +100,12 @@ app.get('/producto/:id', async (req, res) => {
   }
 })
 
-// --- APIS
+// --- Apis
 
 app.use('/api/products', productRoutes)
 app.use('/api/movements', movementRoutes)
 
-// --- CATEGORÍAS
+// --- Categorias Api
 
 app.get('/api/categories', async (req, res) => {
   try {
@@ -118,9 +116,7 @@ app.get('/api/categories', async (req, res) => {
   }
 })
 
-app.post(
-  '/api/create',
-  authorizeRole(['admin', 'manager']),
+app.post('/api/create', authorizeRole(['admin', 'manager']),
   async (req, res) => {
     const { name, description } = req.body
 
@@ -137,9 +133,7 @@ app.post(
   }
 )
 
-app.put(
-  '/api/update/:id',
-  authorizeRole(['admin']),
+app.put('/api/update/:id', authorizeRole(['admin']),
   async (req, res) => {
     try {
       const { name, description } = req.body
@@ -159,9 +153,7 @@ app.put(
   }
 )
 
-app.delete(
-  '/api/delete/:id',
-  authorizeRole(['admin', 'manager']),
+app.delete('/api/delete/:id', authorizeRole(['admin', 'manager']),
   async (req, res) => {
     try {
       await CategoryRepository.delete({
@@ -177,11 +169,7 @@ app.delete(
   }
 )
 
-// --- USUARIOS
-
-app.get(
-  '/api/users',
-  authorizeRole(['admin']),
+app.get('/api/users', authorizeRole(['admin']),
   async (req, res) => {
     try {
       const users = await UserRepository.getAll()
@@ -192,9 +180,7 @@ app.get(
   }
 )
 
-app.put(
-  '/api/users/:id/role',
-  authorizeRole(['admin']),
+app.put('/api/users/:id/role', authorizeRole(['admin']),
   async (req, res) => {
     try {
       const { role } = req.body
@@ -213,9 +199,7 @@ app.put(
   }
 )
 
-app.delete(
-  '/api/users/:id',
-  authorizeRole(['admin']),
+app.delete('/api/users/:id', authorizeRole(['admin']),
   async (req, res) => {
     try {
       if (req.params.id === req.session.user.id) {
@@ -237,7 +221,7 @@ app.delete(
   }
 )
 
-// --- AUTENTICACIÓN
+// Login, Register y Logout
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body
@@ -289,9 +273,7 @@ app.post('/login', async (req, res) => {
   }
 })
 
-app.post(
-  '/register',
-  authorizeRole(['admin']),
+app.post('/register', authorizeRole(['admin']),
   async (req, res) => {
     const {
       username,

@@ -21,11 +21,13 @@
                 </div>
                 
                 <div class="flex flex-col gap-2 mt-6">
-                    <button onclick="document.getElementById('modalMovimiento').classList.remove('hidden')" 
+                    <% if (user.role === 'admin' || user.role === 'manager') { %>
+                    <button onclick="abrirModalNuevoMovimiento()" 
                             class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-bold">
                         Registrar Movimiento
                     </button>
-                    
+                    <% } %>
+            
                     <button onclick="exportarHistorial()" 
                             class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-bold flex items-center justify-center gap-2">
                         📥 Descargar Excel
@@ -48,6 +50,7 @@
                         <th class="p-4">Cantidad</th>
                         <th class="p-4">Motivo</th>
                         <th class="p-4">Usuario</th>
+                        <th class="p-4">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="movimientos-lista">
@@ -66,6 +69,21 @@
                             </td>
                             <td class="p-4 text-gray-500 text-sm italic"><%= mov.reason %></td>
                             <td class="p-4 text-gray-600 text-sm"><%= mov.user %></td>
+                            <td class="p-4">
+                                <% if (user.role === 'admin' || user.role === 'manager') { %>
+                                <button
+                                    onclick='abrirModalEditarMovimiento(<%- JSON.stringify(mov) %>)'
+                                    class="bg-yellow-500 text-white py-1 px-3 rounded-lg hover:bg-yellow-600 transition-colors font-bold">
+                                    ✏️
+                                </button>
+
+                                <button
+                                    onclick="eliminarMovimiento('<%= mov.id %>')"
+                                    class="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 transition-colors font-bold">
+                                    🗑️
+                                </button>
+                                <% } %>
+                            </td>
                         </tr>
                     <% }) %>
                 </tbody>

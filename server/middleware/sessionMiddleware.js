@@ -15,7 +15,7 @@ export const sessionMiddleware = async (req, res, next) => {
       req.session.user = data
       return next()
     } catch (err) {
-      // Token expirado
+      console.log('Token de acceso expirado o inválido')
     }
   }
 

@@ -55,7 +55,6 @@
 
 let editId = null
 
-// Cargar categorías
 async function loadCats() {
 
     const res = await fetch('/api/categories')
@@ -95,7 +94,6 @@ async function loadCats() {
 }
 
 
-// Crear o actualizar categoría
 document.getElementById('formCat').onsubmit = async (e) => {
 
     e.preventDefault()
@@ -135,7 +133,6 @@ document.getElementById('formCat').onsubmit = async (e) => {
 }
 
 
-// Editar categoría
 function editarCat(id, name, description) {
 
     document.getElementById('catName').value = name
@@ -148,7 +145,6 @@ function editarCat(id, name, description) {
 }
 
 
-// Eliminar categoría
 async function eliminarCat(id) {
 
     if (confirm('¿Estás seguro de eliminar esta categoría?')) {

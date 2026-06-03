@@ -3,13 +3,11 @@ import { db } from '../firebase.js'
 const collection = db.collection('products')
 
 export const productController = {
-  // Obtener todos los productos
   getProducts: async (req, res) => {
     try {
       const snapshot = await collection.get()
       const products = []
 
-      // Obtenemos todas las categorías una sola vez para optimizar
       const catSnapshot = await db.collection('categories').get()
       const categoriesMap = {}
       catSnapshot.forEach(doc => {
@@ -21,7 +19,6 @@ export const productController = {
         products.push({
           id: doc.id,
           ...data,
-          // Si el producto tiene categoryId, buscamos su nombre; si no, 'Sin categoría'
           categoryName: categoriesMap[data.categoryId] || 'Sin categoría'
         })
       })
@@ -34,7 +31,6 @@ export const productController = {
 
   createProduct: async (req, res) => {
     try {
-      // Ahora req.body incluye categoryId desde el nuevo modal
       const validatedData = {
         ...req.body,
         stock: Number(req.body.stock),
@@ -48,14 +44,13 @@ export const productController = {
     }
   },
 
-  // Actualizar Producto
   updateProduct: async (req, res) => {
     try {
       const { id } = req.params
       const { price, categoryId } = req.body
       const dataToUpdate = {
         price: Number(price),
-        categoryId, // Actualizamos la referencia
+        categoryId,
         updatedAt: new Date().toISOString()
       }
       await db.collection('products').doc(id).update(dataToUpdate)
@@ -65,7 +60,6 @@ export const productController = {
     }
   },
 
-  // Eliminar Producto
   deleteProduct: async (req, res) => {
     try {
       const { id } = req.params

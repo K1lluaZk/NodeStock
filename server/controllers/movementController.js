@@ -5,13 +5,11 @@ const productsCollection = db.collection('products')
 const movementsCollection = db.collection('movements')
 
 export const movementController = {
-  // Registrar un movimiento (Sumar o Restar Stock)
   registerMovement: async (req, res) => {
     try {
       const { productId, quantity, type } = req.body
       const movementData = createMovementModel(req.body)
 
-      // 1. Obtener el producto actual
       const productRef = productsCollection.doc(productId)
       const productDoc = await productRef.get()
 
@@ -22,7 +20,6 @@ export const movementController = {
       const currentStock = productDoc.data().stock
       let newStock = 0
 
-      // 2. Lógica de Suma o Resta
       if (type === 'IN') {
         newStock = currentStock + Number(quantity)
       } else if (type === 'OUT') {
@@ -32,12 +29,9 @@ export const movementController = {
         newStock = currentStock - Number(quantity)
       }
 
-      // 3. Guardar en Firebase (Usamos una transacción para que sea seguro)
       const batch = db.batch()
-      // Guardar el registro del movimiento
       const newMoveRef = movementsCollection.doc()
       batch.set(newMoveRef, movementData)
-      // Actualizar el stock del producto
       batch.update(productRef, { stock: newStock, updatedAt: new Date().toISOString() })
 
       await batch.commit()
@@ -48,13 +42,112 @@ export const movementController = {
     }
   },
 
-  // Obtener el historial de un producto
   getHistoryByProduct: async (req, res) => {
     try {
       const { productId } = req.params
-      const snapshot = await movementsCollection.where('productId', '==', productId).orderBy('date', 'desc').get()
+      const snapshot = await movementsCollection
+        .where('productId', '==', productId)
+        .orderBy('date', 'desc')
+        .get()
+
       const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       res.status(200).json(history)
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  updateMovement: async (req, res) => {
+    try {
+      const { id } = req.params
+      const { quantity, type, reason, user } = req.body
+
+      const movementRef = movementsCollection.doc(id)
+      const movementDoc = await movementRef.get()
+
+      if (!movementDoc.exists) {
+        return res.status(404).json({ message: 'Movimiento no encontrado' })
+      }
+
+      const oldMovement = movementDoc.data()
+      const productRef = productsCollection.doc(oldMovement.productId)
+      const productDoc = await productRef.get()
+
+      if (!productDoc.exists) {
+        return res.status(404).json({ message: 'Producto no encontrado' })
+      }
+
+      let stock = productDoc.data().stock
+
+      if (oldMovement.type === 'IN') {
+        stock -= Number(oldMovement.quantity)
+      } else {
+        stock += Number(oldMovement.quantity)
+      }
+
+      if (type === 'IN') {
+        stock += Number(quantity)
+      } else {
+        if (stock < Number(quantity)) {
+          return res.status(400).json({ message: 'Stock insuficiente' })
+        }
+        stock -= Number(quantity)
+      }
+
+      const batch = db.batch()
+      batch.update(movementRef, {
+        quantity: Number(quantity),
+        type,
+        reason,
+        user,
+        updatedAt: new Date().toISOString()
+      })
+      batch.update(productRef, {
+        stock,
+        updatedAt: new Date().toISOString()
+      })
+
+      await batch.commit()
+
+      res.json({ message: 'Movimiento actualizado', stock })
+    } catch (error) {
+      res.status(500).json({ error: error.message })
+    }
+  },
+
+  deleteMovement: async (req, res) => {
+    try {
+      const { id } = req.params
+
+      const movementRef = movementsCollection.doc(id)
+      const movementDoc = await movementRef.get()
+
+      if (!movementDoc.exists) {
+        return res.status(404).json({ message: 'Movimiento no encontrado' })
+      }
+
+      const movement = movementDoc.data()
+      const productRef = productsCollection.doc(movement.productId)
+      const productDoc = await productRef.get()
+
+      let stock = productDoc.data().stock
+
+      if (movement.type === 'IN') {
+        stock -= Number(movement.quantity)
+      } else {
+        stock += Number(movement.quantity)
+      }
+
+      const batch = db.batch()
+      batch.delete(movementRef)
+      batch.update(productRef, {
+        stock,
+        updatedAt: new Date().toISOString()
+      })
+
+      await batch.commit()
+
+      res.json({ message: 'Movimiento eliminado', stock })
     } catch (error) {
       res.status(500).json({ error: error.message })
     }

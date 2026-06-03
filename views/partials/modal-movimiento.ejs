@@ -1,55 +1,209 @@
 <div id="modalMovimiento" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold text-gray-800">Registrar Movimiento</h2>
-            <button onclick="document.getElementById('modalMovimiento').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <h2 id="tituloMovimiento" class="text-xl font-bold text-gray-800">
+                Registrar Movimiento
+            </h2>
+
+            <button
+                onclick="document.getElementById('modalMovimiento').classList.add('hidden')"
+                class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
             </button>
         </div>
 
         <form id="formMovimiento" class="space-y-4">
-            <input type="hidden" name="productId" value="<%= productoId %>">
-            
+
+            <input
+                type="hidden"
+                name="productId"
+                value="<%= productoId %>">
+
             <div>
-                <label class="block text-sm font-medium text-gray-700">Tipo de Operación</label>
-                <select name="type" required class="w-full border rounded-lg p-2 mt-1">
+                <label class="block text-sm font-medium text-gray-700">
+                    Tipo de Operación
+                </label>
+
+                <select
+                    name="type"
+                    required
+                    class="w-full border rounded-lg p-2 mt-1">
+
                     <option value="IN">Entrada (+)</option>
                     <option value="OUT">Salida (-)</option>
+
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Cantidad</label>
-                <input type="number" name="quantity" min="1" required class="w-full border rounded-lg p-2 mt-1">
+                <label class="block text-sm font-medium text-gray-700">
+                    Cantidad
+                </label>
+
+                <input
+                    type="number"
+                    name="quantity"
+                    min="1"
+                    required
+                    class="w-full border rounded-lg p-2 mt-1">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Motivo</label>
-                <input type="text" name="reason" required class="w-full border rounded-lg p-2 mt-1" placeholder="Ej: Venta local">
+                <label class="block text-sm font-medium text-gray-700">
+                    Motivo
+                </label>
+
+                <input
+                    type="text"
+                    name="reason"
+                    required
+                    placeholder="Ej: Pedido De Inventario, Devolución, Ajuste, etc."
+                    class="w-full border rounded-lg p-2 mt-1">
             </div>
 
-            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">
+                    Usuario
+                </label>
+
+                <input
+                    type="text"
+                    name="user"
+                    required
+                    placeholder="Nombre de usuario"
+                    class="w-full border rounded-lg p-2 mt-1">
+
+            </div>
+
+            <button
+                id="btnGuardarMovimiento"
+                type="submit"
+                class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all">
+
                 Confirmar Movimiento
+
             </button>
+
         </form>
+
     </div>
 </div>
 
 <script>
-    document.getElementById('formMovimiento').onsubmit = async (e) => {
-        e.preventDefault()
-        const data = Object.fromEntries(new FormData(e.target))
-        
-        const res = await fetch('/api/movements', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
+
+function abrirModalEditarMovimiento(mov) {
+    const modal = document.getElementById('modalMovimiento')
+    const form = document.getElementById('formMovimiento')
+
+    form.dataset.editId = mov.id
+
+    form.querySelector('[name="type"]').value = mov.type
+    form.querySelector('[name="quantity"]').value = mov.quantity
+    form.querySelector('[name="reason"]').value = mov.reason
+    form.querySelector('[name="user"]').value = mov.user
+
+    modal.querySelector('h2').textContent = 'Editar Movimiento'
+
+    form.querySelector('button[type="submit"]').textContent =
+        'Guardar Cambios'
+
+    modal.classList.remove('hidden')
+}
+
+function abrirModalNuevoMovimiento() {
+    const modal = document.getElementById('modalMovimiento')
+    const form = document.getElementById('formMovimiento')
+
+    form.reset()
+
+    delete form.dataset.editId
+
+    modal.querySelector('h2').textContent =
+        'Registrar Movimiento'
+
+    form.querySelector('button[type="submit"]').textContent =
+        'Confirmar Movimiento'
+
+    modal.classList.remove('hidden')
+}
+
+document.getElementById('formMovimiento').onsubmit = async (e) => {
+    e.preventDefault()
+
+    const form = e.target
+
+    const data = Object.fromEntries(
+        new FormData(form)
+    )
+
+    const editId = form.dataset.editId
+
+    const url = editId
+        ? `/api/movements/${editId}`
+        : '/api/movements'
+
+    const method = editId
+        ? 'PUT'
+        : 'POST'
+
+    const res = await fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+
+    if (res.ok) {
+        location.reload()
+    } else {
+        const error = await res.json()
+        alert(error.message || 'Error al guardar movimiento')
+    }
+}
+
+async function eliminarMovimiento(id) {
+
+    const confirmar = confirm(
+        '¿Seguro que deseas eliminar este movimiento?'
+    )
+
+    if (!confirmar) return
+
+    try {
+
+        const res = await fetch(
+            `/api/movements/${id}`,
+            {
+                method: 'DELETE'
+            }
+        )
 
         if (res.ok) {
             location.reload()
         } else {
-            alert('Error al registrar movimiento')
+
+            const error = await res.json()
+
+            alert(
+                error.message ||
+                error.error ||
+                'Error al eliminar'
+            )
         }
+
+    } catch (error) {
+
+        console.error(error)
+
+        alert('Error de conexión')
+
     }
+}
+
 </script>

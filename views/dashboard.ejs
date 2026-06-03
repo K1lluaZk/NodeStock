@@ -165,7 +165,7 @@ window.userRole = "<%= user.role %>";
                     </td>
 
                     <td class="p-4 text-right font-semibold text-green-600">
-                        RD$ ${Number(p.price || 0).toFixed(2)}
+                        RD$ ${Number(p.price || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
 
                     <td class="p-4 text-right flex justify-end gap-2 export-ignore">
@@ -186,7 +186,7 @@ window.userRole = "<%= user.role %>";
                 </tr>
             `;
         }).join('');
-    } // <-- Aquí se cerró correctamente la función render()
+    } 
 
     function aplicarFiltros() {
         const term = document.getElementById('busqueda').value.toLowerCase();
