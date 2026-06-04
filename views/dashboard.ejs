@@ -237,45 +237,30 @@ window.userRole = "<%= user.role %>";
         }
     });
     
-    function abrirModalNuevo() {
+    async function abrirModalNuevo() {
+        await fetchCategories()
+
         const form = document.getElementById('formProducto');
         form.reset();
         delete form.dataset.editId;
 
-        const campos = [form.querySelector('[name="name"]'), form.querySelector('[name="sku"]'), form.querySelector('[name="stock"]')];
-
-        campos.forEach(el => {
-            if (el) { 
-                el.readOnly = false;
-                el.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-            }
-        });
-
         document.getElementById('modalProducto').classList.remove('hidden');
     }
 
-    function abrirModalEdicion(p) {
+    async function abrirModalEdicion(p) {
+        await fetchCategories()
+
         const form = document.getElementById('formProducto');
-        
+
         form.querySelector('[name="name"]').value = p.name;
         form.querySelector('[name="sku"]').value = p.sku;
         form.querySelector('[name="price"]').value = p.price || 0;
         form.querySelector('[name="stock"]').value = p.stock;
 
-        const camposBloqueados = [
-            form.querySelector('[name="name"]'), 
-            form.querySelector('[name="sku"]'), 
-            form.querySelector('[name="stock"]')
-        ];
-
-        camposBloqueados.forEach(el => {
-            if (el) {
-                el.readOnly = true;
-                el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-            }
-        });
+        form.querySelector('[name="categoryId"]').value = p.categoryId || '';
 
         form.dataset.editId = p.id;
+
         document.getElementById('modalProducto').classList.remove('hidden');
     }
 

@@ -48,7 +48,8 @@
 </div>
 
 <script>
-    async function fetchCategories() {
+    async function fetchCategories()
+     {
         const select = document.getElementById('selectCategorias')
         try {
             const response = await fetch('/api/categories')
@@ -56,21 +57,12 @@
             
             select.innerHTML = '<option value="">Seleccione una categoría</option>' + 
                 categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+            return true
         } catch (error) {
             select.innerHTML = '<option value="">Error al cargar categorías</option>'
+            return false
         }
     }
-
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === "class") {
-                const isHidden = mutation.target.classList.contains('hidden')
-                if (!isHidden) fetchCategories()
-            }
-        })
-    })
-
-    observer.observe(document.getElementById('modalProducto'), { attributes: true })
 
     document.getElementById('formProducto').onsubmit = async (e) => {
         e.preventDefault()
@@ -110,10 +102,6 @@
     form.stock.value = producto.stock
     
     form.dataset.editId = producto.id
-    
-    setTimeout(() => {
-        document.getElementById('selectCategorias').value = producto.categoryId || ""
-    }, 500)
 
     modal.classList.remove('hidden')
 }

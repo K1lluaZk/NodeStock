@@ -46,17 +46,35 @@ export const productController = {
 
   updateProduct: async (req, res) => {
     try {
+      const { user } = req.session
+
+      if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+        return res.status(403).json({
+          error: 'No tienes permisos para actualizar productos'
+        })
+      }
+
       const { id } = req.params
-      const { price, categoryId } = req.body
+      const { name, sku, stock, price, categoryId } = req.body
+
       const dataToUpdate = {
+        name,
+        sku,
+        stock: Number(stock),
         price: Number(price),
         categoryId,
         updatedAt: new Date().toISOString()
       }
+
       await db.collection('products').doc(id).update(dataToUpdate)
-      res.status(200).json({ message: 'Producto actualizado' })
+
+      res.status(200).json({
+        message: 'Producto actualizado'
+      })
     } catch (error) {
-      res.status(500).json({ error: error.message })
+      res.status(500).json({
+        error: error.message
+      })
     }
   },
 
