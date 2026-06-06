@@ -206,7 +206,7 @@ NodeStock
 | Rol     | Permisos                                                          |
 | ------- | ----------------------------------------------------------------- |
 | Admin   | Gestión completa de usuarios, productos, categorías y movimientos |
-| Manager | Gestión de inventario y categorías                                |
+| Manager | Gestión de productos, inventario y categorías                     |
 | Viewer  | Consulta de información sin modificaciones                        |
 
 ---
