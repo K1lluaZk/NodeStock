@@ -302,6 +302,7 @@ app.get('/logout', (req, res) => {
     .redirect('/')
 })
 
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
