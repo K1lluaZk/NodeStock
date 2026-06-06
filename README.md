@@ -240,3 +240,4 @@ Este proyecto está bajo la licencia MIT.
 <img width="654" height="583" alt="image" src="https://github.com/user-attachments/assets/d4b20c52-387b-4210-be05-1bec451e0da8" />
 <img width="1227" height="429" alt="image" src="https://github.com/user-attachments/assets/b3e043af-a72f-443b-82ed-dbd9b29cbe37" />
 <img width="1312" height="618" alt="image" src="https://github.com/user-attachments/assets/910bc50b-2a9c-4375-88b5-fb13c6bfd8e0" />
+<img width="1006" height="544" alt="image" src="https://github.com/user-attachments/assets/95bab539-3e3b-407e-ab61-760d2af46230" />
