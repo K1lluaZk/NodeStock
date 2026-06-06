@@ -156,6 +156,7 @@ http://localhost:3000
 
 ## 📁 Estructura del Proyecto
 
+```text
 NodeStock
 │
 ├── server/
@@ -196,6 +197,7 @@ NodeStock
 ├── package-lock.json
 ├── package.json
 └── README.md
+```
 
 ---
 
