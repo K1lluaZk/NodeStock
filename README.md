@@ -237,6 +237,10 @@ https://github.com/EddyMiguel
 
 Este proyecto está bajo la licencia MIT.
 
+## Video Explicativo
+
+https://youtu.be/rmvSyzOo61U
+
 ## Imagenes
 
 <img width="654" height="583" alt="image" src="https://github.com/user-attachments/assets/d4b20c52-387b-4210-be05-1bec451e0da8" />
