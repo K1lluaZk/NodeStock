@@ -34,3 +34,20 @@ jobs:
       # 5. Ejecutar pruebas unitarias
       - name: Ejecutar pruebas
         run: npm test --if-present
+
+      # 6. Simulación de despliegue según el ambiente
+      - name: Simular Despliegue a DEV
+        if: github.ref == 'refs/heads/DEV'
+        run: echo "Desplegando automáticamente en el entorno de DEV..."
+
+      - name: Simular Despliegue a QA
+        if: github.ref == 'refs/heads/QA'
+        run: echo "Desplegando automáticamente en el entorno de QA..."
+
+      - name: Simular Despliegue a PRE
+        if: github.ref == 'refs/heads/PRE'
+        run: echo "Desplegando automáticamente en el entorno de PRE-PRODUCCIÓN..."
+
+      - name: Simular Despliegue a PROD
+        if: github.ref == 'refs/heads/main'
+        run: echo "Desplegando la versión FINAL a PRODUCCIÓN..."
