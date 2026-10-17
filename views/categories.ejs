@@ -12,24 +12,21 @@
 
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold text-gray-800">📁 Categorías</h1>
-        <a href="/dashboard" class="text-indigo-600 hover:underline font-medium">← Volver al Inventario</a>
-    </div>
-
-    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-        <h2 class="text-lg font-bold mb-4 text-gray-700">Nueva Categoría</h2>
-
-        <form id="formCat" class="flex gap-4">
-            <input type="text" id="catName" placeholder="Nombre (ej: Electrónica)" required
-                class="flex-1 border border-gray-300 p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
-
-            <input type="text" id="catDesc" placeholder="Descripción breve"
-                class="flex-1 border border-gray-300 p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
-
-            <button type="submit"
-                class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all">
-                Guardar
-            </button>
-        </form>
+        <div class="flex items-center gap-4">
+            <% if (user.role === 'admin' || user.role === 'manager') { %>
+                <button
+                    type="button"
+                    onclick="abrirModalNuevaCategoria()"
+                    class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all">
+                    Nueva Categoría
+                </button>
+            <% } %>
+            <a
+                href="/dashboard"
+                class="bg-red-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-700 transition-all">
+                ← Volver al Inventario
+            </a>
+        </div>
     </div>
 
     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -39,7 +36,9 @@
                 <tr class="text-gray-600 text-sm uppercase">
                     <th class="p-4 font-semibold">Nombre</th>
                     <th class="p-4 font-semibold">Descripción</th>
-                    <th class="p-4 text-right font-semibold">Acciones</th>
+                    <% if (user.role === 'admin' || user.role === 'manager') { %>
+                        <th class="p-4 text-right font-semibold">Acciones</th>
+                    <% } %>
                 </tr>
             </thead>
 
@@ -51,120 +50,93 @@
 
 </div>
 
+<% if (user.role === 'admin' || user.role === 'manager') { %>
+    <%- include('partials/modal-categoria') %>
+<% } %>
+
 <script>
-
-let editId = null
-
 async function loadCats() {
-
-    const res = await fetch('/api/categories')
-    const data = await res.json()
-
     const body = document.getElementById('lista-categorias')
 
-    body.innerHTML = data.map(cat => `
-        <tr class="hover:bg-gray-50 transition-colors">
+    try {
+        const res = await fetch('/api/categories')
+        if (!res.ok) throw new Error('No se pudieron cargar las categorías')
 
-            <td class="p-4 font-bold text-gray-800">
-                ${cat.name}
-            </td>
-
-            <td class="p-4 text-gray-500">
-                ${cat.description || '-'}
-            </td>
-
-            <td class="p-4 text-right">
-
-                <button
-                    onclick="editarCat('${cat.id}','${cat.name}','${cat.description || ''}')"
-                    class="text-blue-500 hover:text-blue-700 font-medium mr-3">
-                    ✏️ Editar
-                </button>
-
-                <button
-                    onclick="eliminarCat('${cat.id}')"
-                    class="text-red-500 hover:text-red-700 font-medium">
-                    🗑️ Eliminar
-                </button>
-
-            </td>
-
-        </tr>
-    `).join('')
-}
-
-
-document.getElementById('formCat').onsubmit = async (e) => {
-
-    e.preventDefault()
-
-    const name = document.getElementById('catName').value
-    const description = document.getElementById('catDesc').value
-
-    let url = '/api/create'
-    let method = 'POST'
-
-    if (editId) {
-
-        url = `/api/update/${editId}`
-        method = 'PUT'
-
+        const categories = await res.json()
+        body.innerHTML = categories.map(cat => `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="p-4 font-bold text-gray-800">${escapeHtml(cat.name)}</td>
+                <td class="p-4 text-gray-500">${escapeHtml(cat.description || '-')}</td>
+                <% if (user.role === 'admin' || user.role === 'manager') { %>
+                    <td class="p-4 text-right">
+                        <button
+                            type="button"
+                            data-action="edit"
+                            data-id="${escapeHtml(cat.id)}"
+                            data-name="${escapeHtml(cat.name)}"
+                            data-description="${escapeHtml(cat.description || '')}"
+                            class="text-blue-500 hover:text-blue-700 font-medium mr-3">
+                            ✏️ Editar
+                        </button>
+                        <button
+                            type="button"
+                            data-action="delete"
+                            data-id="${escapeHtml(cat.id)}"
+                            class="text-red-500 hover:text-red-700 font-medium">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                <% } %>
+            </tr>
+        `).join('')
+    } catch (error) {
+        body.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-600">No se pudieron cargar las categorías.</td></tr>'
+        console.error(error)
     }
+}
 
-    const res = await fetch(url, {
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[character])
+}
 
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description })
+document.getElementById('lista-categorias').addEventListener('click', async (event) => {
+    const button = event.target.closest('button[data-action]')
+    if (!button) return
 
-    })
-
-    if (res.ok) {
-
-        e.target.reset()
-        editId = null
-
-        document.querySelector('#formCat button').textContent = "Guardar"
-
-        loadCats()
-
+    if (button.dataset.action === 'edit') {
+        abrirModalEditarCategoria({
+            id: button.dataset.id,
+            name: button.dataset.name,
+            description: button.dataset.description
+        })
+    } else if (button.dataset.action === 'delete') {
+        await eliminarCategoria(button.dataset.id)
     }
+})
 
-}
+async function eliminarCategoria(id) {
+    if (!confirm('¿Estás seguro de eliminar esta categoría?')) return
 
-
-function editarCat(id, name, description) {
-
-    document.getElementById('catName').value = name
-    document.getElementById('catDesc').value = description
-
-    editId = id
-
-    document.querySelector('#formCat button').textContent = "Actualizar"
-
-}
-
-
-async function eliminarCat(id) {
-
-    if (confirm('¿Estás seguro de eliminar esta categoría?')) {
-
-        const res = await fetch(`/api/delete/${id}`, {
+    try {
+        const res = await fetch(`/api/categories/${encodeURIComponent(id)}`, {
             method: 'DELETE'
         })
 
-        if (res.ok) {
-
-            loadCats()
-
-        } else {
-
-            alert('Error al eliminar la categoría')
-
+        if (!res.ok) {
+            const error = await res.json()
+            throw new Error(error.error || error.message || 'Error al eliminar la categoría')
         }
 
+        await loadCats()
+    } catch (error) {
+        alert(error.message || 'No se pudo conectar con el servidor')
     }
-
 }
 
 loadCats()

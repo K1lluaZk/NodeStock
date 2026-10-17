@@ -174,9 +174,6 @@ NodeStock
 │   │   ├── movementRoutes.js
 │   │   └── productRoutes.js
 │   │   └── categoryRoutes.js
-│   │
-│   │
-│   ├── category-repository.js
 │   ├── config.js
 │   ├── firebase.js
 │   ├── index.js

@@ -1,12 +1,24 @@
 import { db } from '../firebase.js'
 import { createMovementModel } from '../models/Movement.js'
+import { checkRoleAccess } from '../utils/checkRoleAccess.js'
 
 const productsCollection = db.collection('products')
 const movementsCollection = db.collection('movements')
+const readRoles = ['admin', 'manager', 'viewer']
+const writeRoles = ['admin', 'manager']
 
 export const movementController = {
   registerMovement: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        writeRoles,
+        'No tienes permisos para crear movimientos'
+      )) {
+        return
+      }
+
       const { productId, quantity, type } = req.body
       const movementData = createMovementModel(req.body)
 
@@ -44,6 +56,15 @@ export const movementController = {
 
   getHistoryByProduct: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        readRoles,
+        'No tienes permisos para consultar movimientos'
+      )) {
+        return
+      }
+
       const { productId } = req.params
       const snapshot = await movementsCollection
         .where('productId', '==', productId)
@@ -59,6 +80,15 @@ export const movementController = {
 
   updateMovement: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        writeRoles,
+        'No tienes permisos para actualizar movimientos'
+      )) {
+        return
+      }
+
       const { id } = req.params
       const { quantity, type, reason, user } = req.body
 
@@ -117,6 +147,15 @@ export const movementController = {
 
   deleteMovement: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        writeRoles,
+        'No tienes permisos para eliminar movimientos'
+      )) {
+        return
+      }
+
       const { id } = req.params
 
       const movementRef = movementsCollection.doc(id)
