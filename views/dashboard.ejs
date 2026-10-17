@@ -238,17 +238,19 @@ window.userRole = "<%= user.role %>";
     });
     
     async function abrirModalNuevo() {
-        await fetchCategories()
+        if (!await fetchCategories()) return
 
         const form = document.getElementById('formProducto');
         form.reset();
         delete form.dataset.editId;
+        document.querySelector('#modalProducto h2').textContent = 'Nuevo Producto';
+        form.querySelector('button[type="submit"]').textContent = 'Guardar en Inventario';
 
         document.getElementById('modalProducto').classList.remove('hidden');
     }
 
     async function abrirModalEdicion(p) {
-        await fetchCategories()
+        if (!await fetchCategories()) return
 
         const form = document.getElementById('formProducto');
 

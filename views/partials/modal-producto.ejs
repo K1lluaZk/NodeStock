@@ -48,79 +48,75 @@
 </div>
 
 <script>
-    async function fetchCategories()
-     {
+    async function fetchCategories() {
         const select = document.getElementById('selectCategorias')
         try {
             const response = await fetch('/api/categories')
+            if (!response.ok) throw new Error('No se pudieron cargar las categorías')
+
             const categories = await response.json()
-            
-            select.innerHTML = '<option value="">Seleccione una categoría</option>' + 
-                categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+
+            select.replaceChildren(new Option('Seleccione una categoría', ''))
+            categories.forEach(category => {
+                select.add(new Option(category.name, category.id))
+            })
             return true
         } catch (error) {
             select.innerHTML = '<option value="">Error al cargar categorías</option>'
+            console.error(error)
             return false
         }
     }
 
-    document.getElementById('formProducto').onsubmit = async (e) => {
-        e.preventDefault()
-        
-        const formData = new FormData(e.target)
-        const data = Object.fromEntries(formData)
+    function abrirModalEdicion(producto) {
+        const modal = document.getElementById('modalProducto')
+        const form = document.getElementById('formProducto')
 
-        try {
-            const response = await fetch('/api/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
+        modal.querySelector('h2').textContent = 'Editar Producto'
+        form.querySelector('button[type="submit"]').textContent = 'Actualizar Producto'
 
-            if (response.ok) {
-                location.reload()
-            } else {
-                const errorData = await response.json()
-                alert('Error al guardar: ' + (errorData.error || 'Verifica los datos'))
-            }
-        } catch (error) {
-            console.error('Error en la petición:', error)
-            alert('No se pudo conectar con el servidor')
-        }
+        form.elements.name.value = producto.name
+        form.elements.sku.value = producto.sku
+        form.elements.price.value = producto.price
+        form.elements.stock.value = producto.stock
+        form.elements.categoryId.value = producto.categoryId
+
+        form.dataset.editId = producto.id
+        modal.classList.remove('hidden')
     }
 
-    function abrirModalEdicion(producto) {
-    const modal = document.getElementById('modalProducto')
-    const form = document.getElementById('formProducto')
-    
-    modal.querySelector('h2').innerText = 'Editar Producto'
-    form.querySelector('button[type="submit"]').innerText = 'Actualizar Producto'
-    
-    form.name.value = producto.name
-    form.sku.value = producto.sku
-    form.price.value = producto.price
-    form.stock.value = producto.stock
-    
-    form.dataset.editId = producto.id
+    document.getElementById('formProducto').addEventListener('submit', async (event) => {
+        event.preventDefault()
 
-    modal.classList.remove('hidden')
-}
+        const form = event.currentTarget
+        const editId = form.dataset.editId
+        const data = Object.fromEntries(new FormData(form))
+        const submitButton = form.querySelector('button[type="submit"]')
+        submitButton.disabled = true
 
-document.getElementById('formProducto').onsubmit = async (e) => {
-    e.preventDefault()
-    const formData = new FormData(e.target)
-    const data = Object.fromEntries(formData)
-    const editId = e.target.dataset.editId
+        try {
+            const response = await fetch(
+                editId
+                    ? `/api/products/${encodeURIComponent(editId)}`
+                    : '/api/products',
+                {
+                    method: editId ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }
+            )
 
-    const url = editId ? `/api/products/${editId}` : '/api/products'
-    const method = editId ? 'PUT' : 'POST'
+            if (!response.ok) {
+                const error = await response.json()
+                throw new Error(error.error || error.message || 'No se pudo guardar el producto')
+            }
 
-    const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+            location.reload()
+        } catch (error) {
+            console.error('Error al guardar producto:', error)
+            alert(error.message || 'No se pudo conectar con el servidor')
+        } finally {
+            submitButton.disabled = false
+        }
     })
-
-    if (response.ok) location.reload()
-}
 </script>
