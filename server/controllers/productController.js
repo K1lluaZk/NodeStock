@@ -1,10 +1,22 @@
 import { db } from '../firebase.js'
+import { checkRoleAccess } from '../utils/checkRoleAccess.js'
 
 const collection = db.collection('products')
+const readRoles = ['admin', 'manager', 'viewer']
+const writeRoles = ['admin', 'manager']
 
 export const productController = {
   getProducts: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        readRoles,
+        'No tienes permisos para consultar productos'
+      )) {
+        return
+      }
+
       const snapshot = await collection.get()
       const products = []
 
@@ -31,6 +43,15 @@ export const productController = {
 
   createProduct: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        writeRoles,
+        'No tienes permisos para crear productos'
+      )) {
+        return
+      }
+
       const validatedData = {
         ...req.body,
         stock: Number(req.body.stock),
@@ -46,12 +67,13 @@ export const productController = {
 
   updateProduct: async (req, res) => {
     try {
-      const { user } = req.session
-
-      if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-        return res.status(403).json({
-          error: 'No tienes permisos para actualizar productos'
-        })
+      if (!checkRoleAccess(
+        req,
+        res,
+        writeRoles,
+        'No tienes permisos para actualizar productos'
+      )) {
+        return
       }
 
       const { id } = req.params
@@ -80,6 +102,15 @@ export const productController = {
 
   deleteProduct: async (req, res) => {
     try {
+      if (!checkRoleAccess(
+        req,
+        res,
+        writeRoles,
+        'No tienes permisos para eliminar productos'
+      )) {
+        return
+      }
+
       const { id } = req.params
       await collection.doc(id).delete()
       res.status(200).json({ message: 'Eliminado con éxito' })
