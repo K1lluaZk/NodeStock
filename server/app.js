@@ -1,8 +1,13 @@
 import express from 'express'
+import rateLimit from 'express-rate-limit'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import { SECRET_JWT_KEY, REFRESH_SECRET_KEY } from './config.js'
 import { UserRepository } from './user-repository.js'
+import {
+  sendPasswordResetEmail,
+  validatePasswordResetMailConfiguration
+} from './mailer.js'
 import productRoutes from './routes/productRoutes.js'
 import movementRoutes from './routes/movementRoutes.js'
 import categoryRoutes from './routes/categoryRoutes.js'
@@ -11,6 +16,13 @@ import { sessionMiddleware } from './middleware/sessionMiddleware.js'
 import { authorizeRole } from './middleware/authorizeRole.js'
 
 export const app = express()
+
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false
+})
 
 // --- Configuración y Middlewares Globales
 
@@ -26,6 +38,17 @@ app.get('/', (req, res) => {
   const { user } = req.session
   if (user) return res.redirect('/dashboard')
   res.render('index', { user: null })
+})
+
+app.get('/forgot-password', (req, res) => {
+  res.render('forgot-password')
+})
+
+app.get('/reset-password', (req, res) => {
+  res.set('Cache-Control', 'no-store')
+  res.render('reset-password', {
+    token: typeof req.query.token === 'string' ? req.query.token : ''
+  })
 })
 
 app.get('/dashboard', (req, res) => {
@@ -146,6 +169,65 @@ app.post('/login', async (req, res) => {
     res.send({ user, accessToken })
   } catch (error) {
     res.status(401).send(error.message)
+  }
+})
+
+app.post('/forgot-password', passwordResetLimiter, async (req, res) => {
+  const { username } = req.body
+
+  try {
+    validatePasswordResetMailConfiguration()
+  } catch (error) {
+    console.error('La recuperación de contraseña no está configurada:', error)
+    return res.status(503).send('La recuperación no está disponible. Contacta al administrador.')
+  }
+
+  try {
+    const token = await UserRepository.createPasswordResetToken({ username })
+
+    if (token) {
+      try {
+        await sendPasswordResetEmail({ to: username, token })
+      } catch (error) {
+        await UserRepository.invalidatePasswordResetToken({ username, token })
+        console.error('No se pudo enviar el correo de recuperación:', error)
+      }
+    }
+
+    res.send({
+      message: 'Si el correo corresponde a una cuenta, recibirás instrucciones para restablecer tu contraseña.'
+    })
+  } catch (error) {
+    if (error.message === 'Username must be a string' ||
+      error.message === 'Username must be a valid email') {
+      return res.status(400).send(error.message)
+    }
+
+    console.error('No se pudo iniciar la recuperación de contraseña:', error)
+    res.status(500).send('No se pudo procesar la solicitud. Inténtalo de nuevo.')
+  }
+})
+
+app.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body
+
+  try {
+    await UserRepository.resetPassword({ token, newPassword })
+    res.send({ success: true })
+  } catch (error) {
+    if (error.message === 'Password must be a string' ||
+      error.message === 'Password must be at least 8 characters long' ||
+      error.message === 'Password must include at least one number' ||
+      error.message === 'Password must include at least one uppercase letter') {
+      return res.status(400).send(error.message)
+    }
+
+    if (error.message === 'Invalid or expired password reset link') {
+      return res.status(400).send(error.message)
+    }
+
+    console.error('No se pudo restablecer la contraseña:', error)
+    res.status(500).send('No se pudo restablecer la contraseña. Inténtalo de nuevo.')
   }
 })
 
