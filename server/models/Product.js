@@ -17,8 +17,6 @@ export const createProductModel = (data) => ({
 
 export const updateProductModel = (data) => ({ ...data })
 
-  ...data,
-  createdAt: new Date().toISOString()
-})
 
-export const updateProductModel = (data) => ({ ...data })
+
+
