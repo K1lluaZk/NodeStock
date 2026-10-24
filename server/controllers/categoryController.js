@@ -1,11 +1,12 @@
 import { db } from '../firebase.js'
 import {
-  CategoryValidationError,
   createCategoryModel,
   normalizeCategoryName,
   updateCategoryModel
 } from '../models/Category.js'
 import { checkRoleAccess } from '../utils/checkRoleAccess.js'
+import { validateCategoryData } from '../validators/categoryValidator.js'
+import { ValidationError } from '../validators/ValidationError.js'
 
 const readRoles = ['admin', 'manager', 'viewer']
 const writeRoles = ['admin', 'manager']
@@ -53,7 +54,7 @@ export const categoryController = {
         return
       }
 
-      const category = createCategoryModel(req.body)
+      const category = createCategoryModel(validateCategoryData(req.body))
 
       if (await findDuplicateCategory(category.name)) {
         return res.status(409).json({
@@ -64,7 +65,7 @@ export const categoryController = {
       const newCat = await categoriesCollection.add(category)
       res.status(201).json({ id: newCat.id })
     } catch (error) {
-      const status = error instanceof CategoryValidationError ? 400 : 500
+      const status = error instanceof ValidationError ? 400 : 500
       res.status(status).json({ error: error.message })
     }
   },
@@ -88,7 +89,7 @@ export const categoryController = {
         return res.status(404).json({ error: 'Categoría no encontrada' })
       }
 
-      const category = updateCategoryModel(req.body)
+      const category = updateCategoryModel(validateCategoryData(req.body))
 
       if (await findDuplicateCategory(category.name, id)) {
         return res.status(409).json({
@@ -102,7 +103,7 @@ export const categoryController = {
       })
       res.json({ ok: true })
     } catch (error) {
-      const status = error instanceof CategoryValidationError ? 400 : 500
+      const status = error instanceof ValidationError ? 400 : 500
       res.status(status).json({ error: error.message })
     }
   },
