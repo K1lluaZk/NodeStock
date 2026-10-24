@@ -19,7 +19,7 @@ Una solución moderna para la administración de inventarios, control de movimie
 
 **NodeStock** es una plataforma de gestión de inventario diseñada para pequeñas y medianas empresas que necesitan un control preciso de sus productos, movimientos y usuarios.
 
-La aplicación implementa una arquitectura organizada basada en repositorios y controladores, permitiendo administrar productos, categorías y movimientos de inventario mediante una interfaz intuitiva y segura.
+La aplicación implementa una arquitectura por capas: las rutas exponen los endpoints, los controladores coordinan las solicitudes, los validadores verifican y normalizan los datos de entrada y los modelos representan los datos del dominio.
 
 El sistema incorpora autenticación mediante JWT, control de permisos por roles y almacenamiento persistente utilizando Firebase Firestore.
 
@@ -162,18 +162,27 @@ NodeStock
 ├── server/
 │   │
 │   ├── controllers/
-│   │   └── categoryController.js
-│   │   └── movementController.js
+│   │   ├── categoryController.js
+│   │   ├── movementController.js
 │   │   └── productController.js
 │   │
 │   ├── middleware/
 │   │   ├── authorizeRole.js
 │   │   └── sessionMiddleware.js
 │   │
+│   ├── models/
+│   │   ├── Category.js
+│   │   ├── Movement.js
+│   │   └── Product.js
+│   │
 │   ├── routes/
 │   │   ├── movementRoutes.js
-│   │   └── productRoutes.js
+│   │   ├── productRoutes.js
 │   │   └── categoryRoutes.js
+│   ├── validators/
+│   │   ├── categoryValidator.js
+│   │   ├── productValidator.js
+│   │   └── ValidationError.js
 │   ├── config.js
 │   ├── firebase.js
 │   ├── index.js
