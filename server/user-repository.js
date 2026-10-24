@@ -1,6 +1,7 @@
 import { db } from './firebase.js'
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
+import { FieldValue } from 'firebase-admin/firestore'
 import { SALT_ROUNDS } from './config.js'
 
 const usersCollection = db.collection('users')
@@ -70,6 +71,102 @@ export class UserRepository {
       _id: userDoc.id,
       ...publicUser
     }
+  }
+
+  static async createPasswordResetToken ({ username }) {
+    Validation.username(username)
+
+    const snapshot = await usersCollection
+      .where('username', '==', username)
+      .limit(1)
+      .get()
+
+    if (snapshot.empty) {
+      return null
+    }
+
+    const userDoc = snapshot.docs[0]
+    const user = userDoc.data()
+    const lastRequest = user.passwordResetRequestedAt?.toDate?.()
+
+    if (lastRequest && Date.now() - lastRequest.getTime() < 60 * 1000) {
+      return null
+    }
+
+    const token = crypto.randomBytes(32).toString('hex')
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+
+    await userDoc.ref.update({
+      passwordResetTokenHash: tokenHash,
+      passwordResetExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      passwordResetRequestedAt: new Date()
+    })
+
+    return token
+  }
+
+  static async invalidatePasswordResetToken ({ username, token }) {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const snapshot = await usersCollection
+      .where('username', '==', username)
+      .limit(1)
+      .get()
+
+    if (snapshot.empty) return
+
+    const userDoc = snapshot.docs[0]
+
+    await db.runTransaction(async transaction => {
+      const currentUser = await transaction.get(userDoc.ref)
+      if (currentUser.data()?.passwordResetTokenHash !== tokenHash) return
+
+      transaction.update(userDoc.ref, {
+        passwordResetTokenHash: FieldValue.delete(),
+        passwordResetExpiresAt: FieldValue.delete()
+      })
+    })
+  }
+
+  static async resetPassword ({ token, newPassword }) {
+    if (typeof token !== 'string' || !/^[a-f\d]{64}$/i.test(token)) {
+      throw new Error('Invalid or expired password reset link')
+    }
+
+    Validation.password(newPassword)
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const snapshot = await usersCollection
+      .where('passwordResetTokenHash', '==', tokenHash)
+      .limit(1)
+      .get()
+
+    if (snapshot.empty) {
+      throw new Error('Invalid or expired password reset link')
+    }
+
+    const userRef = snapshot.docs[0].ref
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS)
+
+    await db.runTransaction(async transaction => {
+      const userDoc = await transaction.get(userRef)
+      const user = userDoc.data()
+      const expiresAt = user?.passwordResetExpiresAt?.toDate?.()
+
+      if (
+        user?.passwordResetTokenHash !== tokenHash ||
+        !expiresAt ||
+        expiresAt.getTime() <= Date.now()
+      ) {
+        throw new Error('Invalid or expired password reset link')
+      }
+
+      transaction.update(userRef, {
+        password: hashedPassword,
+        passwordResetTokenHash: FieldValue.delete(),
+        passwordResetExpiresAt: FieldValue.delete(),
+        passwordResetRequestedAt: FieldValue.delete()
+      })
+    })
   }
 
   static async getAll () {

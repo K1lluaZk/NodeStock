@@ -119,7 +119,7 @@ npm install
 
 ### 3️⃣ Configurar variables de entorno
 
-Crear un archivo `.env` en la raíz del proyecto:
+Crear el archivo `server/.env`:
 
 ```env
 PORT=3000
@@ -130,7 +130,17 @@ REFRESH_SECRET_KEY=tu_clave_refresh
 FIREBASE_PROJECT_ID=tu_project_id
 FIREBASE_CLIENT_EMAIL=tu_client_email
 FIREBASE_PRIVATE_KEY=tu_private_key
+
+APP_URL=http://localhost:3000
+SMTP_HOST=smtp.tu-proveedor.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=tu_correo
+SMTP_PASS=tu_contraseña_de_aplicacion
+SMTP_FROM=NodeStock <tu_correo>
 ```
+
+El enlace de recuperación se envía al correo de la cuenta, vence en una hora y solo se puede usar una vez. Configura SMTP con las credenciales de tu proveedor de correo; no compartas ni publiques `SMTP_PASS`.
 
 ### 4️⃣ Ejecutar la aplicación
 
