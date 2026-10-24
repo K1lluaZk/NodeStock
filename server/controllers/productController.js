@@ -3,6 +3,7 @@ import {
   createProductModel,
   normalizeProductName,
   normalizeProductSku,
+  ProductValidationError,
   productNameIndexId,
   productSkuIndexId,
   updateProductModel
@@ -44,6 +45,7 @@ const categoryExists = async (categoryId) => {
 
 const respondToProductError = (res, error) => {
   const status = error instanceof ValidationError ? 400 : 500
+  const status = error instanceof ProductValidationError ? 400 : 500
   res.status(status).json({ error: error.message })
 }
 
@@ -94,12 +96,51 @@ export const productController = {
 
       const product = createProductModel(validateProductData(req.body, true))
 
+      const product = createProductModel(req.body)
+
+
       if (!await categoryExists(product.categoryId)) {
         return res.status(400).json({ error: 'La categoría seleccionada no existe' })
       }
 
       if (await findDuplicateName(product.name)) {
         return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+      }
+
+      if (await findDuplicateSku(product.sku)) {
+        return res.status(409).json({ error: 'Ya existe un producto con ese SKU' })
+      }
+
+      const productRef = collection.doc()
+      const skuIndexRef = skuIndexCollection.doc(productSkuIndexId(product.sku))
+      const nameIndexRef = nameIndexCollection.doc(productNameIndexId(product.name))
+      const created = await db.runTransaction(async (transaction) => {
+        const skuIndex = await transaction.get(skuIndexRef)
+        const nameIndex = await transaction.get(nameIndexRef)
+
+        if (skuIndex.exists || nameIndex.exists) {
+          return skuIndex.exists ? 'duplicate-sku' : 'duplicate-name'
+        }
+
+        transaction.create(productRef, product)
+        transaction.create(skuIndexRef, {
+          productId: productRef.id,
+          sku: normalizeProductSku(product.sku)
+        })
+        transaction.create(nameIndexRef, {
+          productId: productRef.id,
+          name: normalizeProductName(product.name)
+        })
+        return 'created'
+      })
+
+      if (created === 'duplicate-name') {
+        return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+      }
+      if (created === 'duplicate-sku') {
+        return res.status(409).json({ error: 'Ya existe un producto con ese SKU' })
+      }
+      
       }
 
       if (await findDuplicateSku(product.sku)) {
@@ -177,6 +218,28 @@ export const productController = {
 
       const newSkuIndexRef = skuIndexCollection.doc(productSkuIndexId(product.sku))
       const newNameIndexRef = nameIndexCollection.doc(productNameIndexId(product.name))
+
+      if (!existingProduct.exists) {
+        return res.status(404).json({ error: 'Producto no encontrado' })
+      }
+
+      const product = updateProductModel(req.body)
+
+      if (!await categoryExists(product.categoryId)) {
+        return res.status(400).json({ error: 'La categoría seleccionada no existe' })
+      }
+
+      if (await findDuplicateName(product.name, id)) {
+        return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+      }
+
+      if (await findDuplicateSku(product.sku, id)) {
+        return res.status(409).json({ error: 'Ya existe un producto con ese SKU' })
+      }
+
+      const newSkuIndexRef = skuIndexCollection.doc(productSkuIndexId(product.sku))
+      const newNameIndexRef = nameIndexCollection.doc(productNameIndexId(product.name))
+
       const updateResult = await db.runTransaction(async (transaction) => {
         const currentProduct = await transaction.get(productRef)
         if (!currentProduct.exists) return 'missing'
@@ -187,6 +250,13 @@ export const productController = {
           : null
         const currentNameIndexRef = typeof currentData.name === 'string'
           ? nameIndexCollection.doc(productNameIndexId(currentData.name))
+        const currentSku = currentData.sku
+        const currentName = currentData.name
+        const currentSkuIndexRef = typeof currentSku === 'string'
+          ? skuIndexCollection.doc(productSkuIndexId(currentSku))
+          : null
+        const currentNameIndexRef = typeof currentName === 'string'
+          ? nameIndexCollection.doc(productNameIndexId(currentName))
           : null
         const newSkuIndex = await transaction.get(newSkuIndexRef)
         const newNameIndex = await transaction.get(newNameIndexRef)
@@ -196,6 +266,59 @@ export const productController = {
         const oldNameIndex = currentNameIndexRef
           ? await transaction.get(currentNameIndexRef)
           : null
+        if (
+          newSkuIndex.exists &&
+          newSkuIndex.data().productId !== id
+        ) {
+          return 'duplicate-sku'
+        }
+        if (
+          newNameIndex.exists &&
+          newNameIndex.data().productId !== id
+        ) {
+          return 'duplicate-name'
+        }
+
+        transaction.update(productRef, {
+          ...product,
+          updatedAt: new Date().toISOString()
+        })
+
+        if (
+          currentSkuIndexRef &&
+          currentSkuIndexRef.path !== newSkuIndexRef.path &&
+          oldSkuIndex?.data()?.productId === id
+        ) {
+          transaction.delete(currentSkuIndexRef)
+        }
+        if (
+          currentNameIndexRef &&
+          currentNameIndexRef.path !== newNameIndexRef.path &&
+          oldNameIndex?.data()?.productId === id
+        ) {
+          transaction.delete(currentNameIndexRef)
+        }
+
+        transaction.set(newSkuIndexRef, {
+          productId: id,
+          sku: normalizeProductSku(product.sku)
+        })
+        transaction.set(newNameIndexRef, {
+          productId: id,
+          name: normalizeProductName(product.name)
+        })
+        return 'updated'
+      })
+
+      if (updateResult === 'missing') {
+        return res.status(404).json({ error: 'Producto no encontrado' })
+      }
+      if (updateResult === 'duplicate-name') {
+        return res.status(409).json({ error: 'Ya existe un producto con ese nombre' })
+      }
+      if (updateResult === 'duplicate-sku') {
+        return res.status(409).json({ error: 'Ya existe un producto con ese SKU' })
+      }
 
         if (newSkuIndex.exists && newSkuIndex.data().productId !== id) {
           return 'duplicate-sku'
@@ -265,6 +388,8 @@ export const productController = {
       const { id } = req.params
       const productRef = collection.doc(id)
       const deleted = await db.runTransaction(async (transaction) => {
+      const deleteResult = await db.runTransaction(async (transaction) => {
+
         const productSnapshot = await transaction.get(productRef)
         if (!productSnapshot.exists) return false
 
@@ -293,6 +418,7 @@ export const productController = {
       })
 
       if (!deleted) {
+      if (!deleteResult) {
         return res.status(404).json({ error: 'Producto no encontrado' })
       }
 
