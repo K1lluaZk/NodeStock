@@ -16,7 +16,3 @@ export const createProductModel = (data) => ({
 })
 
 export const updateProductModel = (data) => ({ ...data })
-
-
-
-
