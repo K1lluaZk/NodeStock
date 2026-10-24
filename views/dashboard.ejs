@@ -82,7 +82,16 @@
                         <th class="p-4 text-right font-semibold export-ignore">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-body" class="divide-y divide-gray-100"></tbody>
+                <tbody id="tabla-body" class="divide-y divide-gray-100" aria-live="polite" aria-busy="true">
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-gray-500" role="status">
+                            <span class="inline-flex items-center gap-3">
+                                <span class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
+                                Cargando productos...
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -98,13 +107,21 @@ window.userRole = "<%= user.role %>";
     const UMBRAL_STOCK = 5;
 
     async function load() {
+        const body = document.getElementById('tabla-body');
+        body.setAttribute('aria-busy', 'true');
+
         try {
             const res = await fetch('/api/products');
+            if (!res.ok) throw new Error('No se pudieron cargar los productos');
+
             productos = await res.json();
             render(productos);
             revisarStockGlobal();
         } catch (error) { 
             console.error(error); 
+            body.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-600" role="alert">No se pudieron cargar los productos. Intenta recargar la página.</td></tr>';
+        } finally {
+            body.setAttribute('aria-busy', 'false');
         }
     }
 
@@ -244,6 +261,8 @@ window.userRole = "<%= user.role %>";
         form.reset();
         delete form.dataset.editId;
         document.querySelector('#modalProducto h2').textContent = 'Nuevo Producto';
+        document.getElementById('btnGuardarProducto').textContent = 'Guardar en Inventario';
+        document.getElementById('errorProducto').classList.add('hidden');
         form.querySelector('button[type="submit"]').textContent = 'Guardar en Inventario';
 
         document.getElementById('modalProducto').classList.remove('hidden');
@@ -262,6 +281,9 @@ window.userRole = "<%= user.role %>";
         form.querySelector('[name="categoryId"]').value = p.categoryId || '';
 
         form.dataset.editId = p.id;
+        document.querySelector('#modalProducto h2').textContent = 'Editar Producto';
+        document.getElementById('btnGuardarProducto').textContent = 'Actualizar Producto';
+        document.getElementById('errorProducto').classList.add('hidden');
 
         document.getElementById('modalProducto').classList.remove('hidden');
     }
