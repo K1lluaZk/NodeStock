@@ -1,0 +1,53 @@
+name: Pipeline Integracion Continua (CI)
+
+# Eventos que activan el pipeline
+on:
+  push:
+    branches: [ DEV, QA, PRE, main ]
+  pull_request:
+    branches: [ DEV, QA, PRE, main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      # 2. Configurar el entorno de ejecución
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Instalar dependencias
+      - name: Instalar dependencias
+        run: npm ci
+
+      # 4. Compilar / Construir el proyecto
+      - name: Compilar proyecto
+        run: npm run build --if-present
+
+      # 5. Ejecutar pruebas unitarias
+      - name: Ejecutar pruebas
+        run: npm test --if-present
+
+      # 6. Simulación de despliegue según el ambiente
+      - name: Simular Despliegue a DEV
+        if: github.ref == 'refs/heads/DEV'
+        run: echo "Desplegando automáticamente en el entorno de DEV..."
+
+      - name: Simular Despliegue a QA
+        if: github.ref == 'refs/heads/QA'
+        run: echo "Desplegando automáticamente en el entorno de QA..."
+
+      - name: Simular Despliegue a PRE
+        if: github.ref == 'refs/heads/PRE'
+        run: echo "Desplegando automáticamente en el entorno de PRE-PRODUCCIÓN..."
+
+      - name: Simular Despliegue a PROD
+        if: github.ref == 'refs/heads/main'
+        run: echo "Desplegando la versión FINAL a PRODUCCIÓN..."

@@ -19,7 +19,7 @@ Una solución moderna para la administración de inventarios, control de movimie
 
 **NodeStock** es una plataforma de gestión de inventario diseñada para pequeñas y medianas empresas que necesitan un control preciso de sus productos, movimientos y usuarios.
 
-La aplicación implementa una arquitectura organizada basada en repositorios y controladores, permitiendo administrar productos, categorías y movimientos de inventario mediante una interfaz intuitiva y segura.
+La aplicación implementa una arquitectura por capas: las rutas exponen los endpoints, los controladores coordinan las solicitudes, los validadores verifican y normalizan los datos de entrada y los modelos representan los datos del dominio.
 
 El sistema incorpora autenticación mediante JWT, control de permisos por roles y almacenamiento persistente utilizando Firebase Firestore.
 
@@ -119,7 +119,7 @@ npm install
 
 ### 3️⃣ Configurar variables de entorno
 
-Crear un archivo `.env` en la raíz del proyecto:
+Crear el archivo `server/.env`:
 
 ```env
 PORT=3000
@@ -130,7 +130,17 @@ REFRESH_SECRET_KEY=tu_clave_refresh
 FIREBASE_PROJECT_ID=tu_project_id
 FIREBASE_CLIENT_EMAIL=tu_client_email
 FIREBASE_PRIVATE_KEY=tu_private_key
+
+APP_URL=http://localhost:3000
+SMTP_HOST=smtp.tu-proveedor.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=tu_correo
+SMTP_PASS=tu_contraseña_de_aplicacion
+SMTP_FROM=NodeStock <tu_correo>
 ```
+
+El enlace de recuperación se envía al correo de la cuenta, vence en una hora y solo se puede usar una vez. Configura SMTP con las credenciales de tu proveedor de correo; no compartas ni publiques `SMTP_PASS`.
 
 ### 4️⃣ Ejecutar la aplicación
 
@@ -162,21 +172,27 @@ NodeStock
 ├── server/
 │   │
 │   ├── controllers/
-│   │   └── categoryController.js
-│   │   └── movementController.js
+│   │   ├── categoryController.js
+│   │   ├── movementController.js
 │   │   └── productController.js
 │   │
 │   ├── middleware/
 │   │   ├── authorizeRole.js
 │   │   └── sessionMiddleware.js
 │   │
+│   ├── models/
+│   │   ├── Category.js
+│   │   ├── Movement.js
+│   │   └── Product.js
+│   │
 │   ├── routes/
 │   │   ├── movementRoutes.js
-│   │   └── productRoutes.js
+│   │   ├── productRoutes.js
 │   │   └── categoryRoutes.js
-│   │
-│   │
-│   ├── category-repository.js
+│   ├── validators/
+│   │   ├── categoryValidator.js
+│   │   ├── productValidator.js
+│   │   └── ValidationError.js
 │   ├── config.js
 │   ├── firebase.js
 │   ├── index.js

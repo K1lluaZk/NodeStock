@@ -1,11 +1,18 @@
-export const createProductModel = (data) => {
-  return {
-    name: data.name || '',
-    description: data.description || '',
-    price: Number(data.price) || 0,
-    stock: Number(data.stock) || 0,
-    category: data.category || 'General',
-    sku: data.sku || '',
-    createdAt: new Date().toISOString()
-  }
+export const normalizeProductSku = (sku) => sku.trim().toLowerCase()
+
+export const normalizeProductName = (name) => name.trim().toLowerCase()
+
+export const productSkuIndexId = (sku) => {
+  return Buffer.from(normalizeProductSku(sku)).toString('base64url')
 }
+
+export const productNameIndexId = (name) => {
+  return Buffer.from(normalizeProductName(name)).toString('base64url')
+}
+
+export const createProductModel = (data) => ({
+  ...data,
+  createdAt: new Date().toISOString()
+})
+
+export const updateProductModel = (data) => ({ ...data })
