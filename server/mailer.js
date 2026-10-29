@@ -61,6 +61,54 @@ export const sendPasswordResetEmail = async ({ to, token }) => {
     to,
     subject: 'Restablece tu contraseña de NodeStock',
     text: `Usa este enlace para crear una nueva contraseña. El enlace vence en una hora: ${resetUrl.href}`,
-    html: `<p>Solicitaste restablecer tu contraseña de NodeStock.</p><p><a href="${resetUrl.href}">Crear nueva contraseña</a></p><p>Este enlace vence en una hora. Si no solicitaste el cambio, ignora este correo.</p>`
+    html: `
+    <div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #333333; line-height: 1.6;">
+
+      <p style="font-size: 16px; margin-bottom: 20px;">
+        Recibimos una solicitud para restablecer la contraseña de tu cuenta de
+        <strong>NodeStock</strong>.
+      </p>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a
+          href="${resetUrl.href}"
+          style="
+            display: inline-block;
+            background: #4F46E5;
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+          "
+        >
+          🔑 Crear nueva contraseña
+        </a>
+      </div>
+
+      <div
+        style="
+          background: #F8F9FA;
+          border-left: 4px solid #4F46E5;
+          padding: 16px;
+          border-radius: 6px;
+          font-size: 14px;
+          color: #555555;
+        "
+      >
+        ⏰ <strong>Importante:</strong> Este enlace vencerá en <strong>1 hora</strong>.
+
+        <br><br>
+
+        Si no solicitaste este cambio, puedes ignorar este correo de forma segura.
+      </div>
+
+      <p style="margin-top: 30px; font-size: 13px; color: #888888; text-align: center;">
+        © ${new Date().getFullYear()} NodeStock. Todos los derechos reservados.
+      </p>
+
+    </div>
+  `
   })
 }
