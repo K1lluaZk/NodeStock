@@ -57,11 +57,11 @@ export const sendPasswordResetEmail = async ({ to, token }) => {
   resetUrl.searchParams.set('token', token)
 
   await transporter.sendMail({
-  from: configuration.from,
-  to,
-  subject: 'Restablece tu contraseña de NodeStock',
-  text: `Usa este enlace para crear una nueva contraseña. El enlace vence en una hora: ${resetUrl.href}`,
-  html: `
+    from: configuration.from,
+    to,
+    subject: 'Restablece tu contraseña de NodeStock',
+    text: `Usa este enlace para crear una nueva contraseña. El enlace vence en una hora: ${resetUrl.href}`,
+    html: `
     <div style="font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; color: #333333; line-height: 1.6;">
 
       <p style="font-size: 16px; margin-bottom: 20px;">
@@ -110,4 +110,5 @@ export const sendPasswordResetEmail = async ({ to, token }) => {
 
     </div>
   `
-})
+  })
+}
