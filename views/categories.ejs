@@ -3,8 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Categorías - NodeStock</title>
+
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark', storedTheme ? storedTheme === 'dark' : prefersDark);
+        })();
+    </script>
+
     <%- include('partials/favicon') %>
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/theme.js" defer></script>
 </head>
 
 <body class="bg-gray-100 p-8">
@@ -14,6 +26,9 @@
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold text-gray-800">📁 Categorías</h1>
         <div class="flex items-center gap-4">
+            <button type="button" data-theme-toggle class="theme-toggle-btn px-3 py-2 rounded-lg border transition-all shadow-sm text-lg leading-none" aria-label="Cambiar tema">
+                🌙
+            </button>
             <% if (user.role === 'admin' || user.role === 'manager') { %>
                 <button
                     type="button"

@@ -3,9 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>NodeStock - Dashboard</title>
+
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark', storedTheme ? storedTheme === 'dark' : prefersDark);
+        })();
+    </script>
+
     <%- include('partials/favicon') %>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/table2excel@1.0.4/dist/table2excel.min.js"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/theme.js" defer></script>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="max-w-6xl mx-auto">
@@ -23,6 +35,10 @@
                         👥 Usuarios
                     </a>
                 <% } %>
+
+                <button type="button" data-theme-toggle class="theme-toggle-btn px-3 py-2 rounded-lg border transition-all shadow-sm text-lg leading-none" aria-label="Cambiar tema">
+                    🌙
+                </button>
 
                 <button id="btn-logout" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-semibold border border-red-200 transition-all">
                     Cerrar sesión

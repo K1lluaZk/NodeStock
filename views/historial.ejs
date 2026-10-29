@@ -3,14 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>Historial - <%= producto.name %></title>
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark', storedTheme ? storedTheme === 'dark' : prefersDark);
+        })();
+    </script>
     <%- include('partials/favicon') %>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/table2excel@1.0.4/dist/table2excel.min.js"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/theme.js" defer></script>
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto p-8">
-        <a href="/dashboard" class="bg-red-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-700 transition-all">← Volver al Dashboard</a>
+        <div class="flex justify-between items-center gap-3 mb-6">
+            <a href="/dashboard" class="bg-red-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-700 transition-all">← Volver al Dashboard</a>
+            <button type="button" data-theme-toggle class="theme-toggle-btn px-3 py-2 rounded-lg border transition-all shadow-sm text-lg leading-none" aria-label="Cambiar tema">
+                🌙
+            </button>
+        </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             <div class="bg-white p-6 rounded-xl shadow-sm border text-center lg:text-left">
