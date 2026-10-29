@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NodeStock - Acceso</title>
+  <script>
+    (() => {
+      const storedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', storedTheme ? storedTheme === 'dark' : prefersDark);
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/theme.js" defer></script>
   <style>
     .tab.active { color: #4f46e5; border-bottom: 2px solid #4f46e5; }
     .hidden { display: none; }
