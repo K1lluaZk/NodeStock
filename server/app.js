@@ -1,4 +1,5 @@
 import express from 'express'
+import { fileURLToPath } from 'node:url'
 import rateLimit from 'express-rate-limit'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
@@ -34,6 +35,10 @@ app.use(express.static('public'))
 app.use(sessionMiddleware)
 
 // --- Vistas
+
+app.get('/favicon.svg', (req, res) => {
+  res.sendFile(fileURLToPath(new URL('../public/favicon.svg', import.meta.url)))
+})
 
 app.get('/', (req, res) => {
   const { user } = req.session

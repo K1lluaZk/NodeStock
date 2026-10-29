@@ -241,11 +241,13 @@ NodeStock
 ## 👨‍💻 Autores
 
 **Mario (K1lluaZk)**
-**Eddy (EddyMiguel)**
-
 GitHub:
 https://github.com/K1lluaZk
+
+**Eddy (EddyMiguel)**
+GitHub:
 https://github.com/EddyMiguel
+
 
 ---
 
